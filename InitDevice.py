@@ -98,7 +98,7 @@ def clone_or_pull_repo(ssh):
     return repo_path
 
 def install_feature(ssh, repo_path, subdirectory):
-    """Stellt sicher, dass ein Unterverzeichnis im Repository existiert, erstellt ein Shell-Skript, wenn es neu ist, oder führt ein vorhandenes aus."""
+    """Stellt sicher, dass ein Unterverzeichnis im Repository existiert, beendet script andernfalls."""
     subdirectory_path = f"{repo_path}/{subdirectory}"
     script_path = f"{subdirectory_path}/install.sh"
 
