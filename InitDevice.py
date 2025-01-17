@@ -98,7 +98,7 @@ def clone_or_pull_repo(ssh):
     return repo_path
 
 def install_feature(ssh, repo_path, subdirectory):
-    """Stellt sicher, dass ein Unterverzeichnis im Repository existiert, erstellt ein Shell-Skript, führt es aus und aktualisiert das Repository."""
+    """Stellt sicher, dass ein Unterverzeichnis im Repository existiert, erstellt ein Shell-Skript, wenn es neu ist, oder führt ein vorhandenes aus."""
     subdirectory_path = f"{repo_path}/{subdirectory}"
     script_path = f"{subdirectory_path}/install.sh"
 
@@ -108,31 +108,14 @@ def install_feature(ssh, repo_path, subdirectory):
     subdirectory_status = stdout.read().decode().strip()
 
     if subdirectory_status == "not exists":
-        print(f"[INFO] Unterverzeichnis '{subdirectory}' existiert nicht. Erstelle es...")
-        execute_command(ssh, f"mkdir -p {subdirectory_path}")
-
-        print(f"[INFO] Erstelle neues Shell-Skript: {script_path}")
-        execute_command(ssh, f"echo '#!/bin/bash\\necho Installation abgeschlossen.' > {script_path}")
-        execute_command(ssh, f"chmod +x {script_path}")
-    else:
-        print(f"[INFO] Unterverzeichnis '{subdirectory}' existiert bereits.")
+        print("[ERROR] Feature existiert nicht. Das Skript wird beendet.")
+        raise SystemExit(1)
+        
+    print(f"[INFO] Feature '{subdirectory}' gefunden.")
 
     # Skript ausführen
     print(f"[INFO] Führe Shell-Skript aus: {script_path}")
     execute_command(ssh, f"bash {script_path}")
-
-    # Änderungen im Repository prüfen und aktualisieren
-    print(f"[INFO] Prüfe auf Änderungen im Repository {repo_path}...")
-    execute_command(ssh, f"cd {repo_path} && git add .")
-    stdin, stdout, stderr = ssh.exec_command(f"cd {repo_path} && git status --porcelain")
-    changes = stdout.read().decode().strip()
-
-    if changes:
-        print("[INFO] Änderungen gefunden. Commit und Push werden durchgeführt...")
-        execute_command(ssh, f"cd {repo_path} && git commit -m 'Automatische Aktualisierung durch install_feature' && git push")
-        print("[INFO] Änderungen erfolgreich gepusht.")
-    else:
-        print("[INFO] Keine Änderungen gefunden. Kein Commit oder Push erforderlich.")
 
     return subdirectory_path
 
