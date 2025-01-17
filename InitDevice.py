@@ -72,13 +72,39 @@ def clone_or_pull_repo(ssh):
 
     return repo_path
 
+def install_feature(ssh, repo_path, subdirectory):
+    """Stellt sicher, dass ein Unterverzeichnis im Repository existiert, erstellt ein Shell-Skript, wenn es neu ist, oder führt ein vorhandenes aus."""
+    subdirectory_path = f"{repo_path}/{subdirectory}"
+    script_path = f"{subdirectory_path}/install.sh"
+
+    # Prüfen, ob das Unterverzeichnis existiert
+    stdin, stdout, stderr = ssh.exec_command(f"[ -d {subdirectory_path} ] && echo 'exists' || echo 'not exists'")
+    subdirectory_status = stdout.read().decode().strip()
+
+    if subdirectory_status == "not exists":
+        print(f"Unterverzeichnis {subdirectory} existiert nicht. Erstelle es...")
+        execute_command(ssh, f"mkdir -p {subdirectory_path}")
+
+        print(f"Erstelle neues Shell-Skript: {script_path}")
+        execute_command(ssh, f"echo '#!/bin/bash\necho Installation abgeschlossen.' > {script_path}")
+        execute_command(ssh, f"chmod +x {script_path}")
+    else:
+        print(f"Unterverzeichnis {subdirectory} existiert bereits.")
+
+    # Skript ausführen
+    print(f"Führe Shell-Skript aus: {script_path}")
+    execute_command(ssh, f"bash {script_path}")
+
+    return subdirectory_path
+
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) != 2:
-        raise ValueError("Bitte geben Sie die IP-Adresse als Argument an. Beispiel: python InitDevice.py 192.168.1.100")
+    if len(sys.argv) != 3:
+        raise ValueError("Bitte geben Sie die IP-Adresse und das Unterverzeichnis als Argumente an. Beispiel: python InitDevice.py 192.168.1.100 my_subdirectory")
 
     raspberry_pi_hostname = sys.argv[1]
+    subdirectory = sys.argv[2]
 
     username, password = get_ssh_credentials()
 
@@ -89,7 +115,8 @@ if __name__ == "__main__":
 
         check_and_install_git(ssh)
         repo_path = clone_or_pull_repo(ssh)
-        print(f"Repository-Pfad: {repo_path}")
+        subdirectory_path = install_feature(ssh, repo_path, subdirectory)
+        print(f"Pfad zum Unterverzeichnis: {subdirectory_path}")
 
     except Exception as e:
         print(f"Fehler bei der Verbindung oder Installation: {e}")
