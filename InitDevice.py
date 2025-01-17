@@ -29,12 +29,6 @@ def execute_command(ssh, command):
         print(line, end="")
     stdout.channel.recv_exit_status()  # Warten, bis der Befehl abgeschlossen ist
 
-def update_system(ssh):
-    """Aktualisiert das System des Remote-Hosts."""
-    print("Aktualisiere das System...")
-    execute_command(ssh, "sudo apt update && sudo apt upgrade -y")
-    print("Systemaktualisierung abgeschlossen.")
-
 def is_git_installed(ssh):
     """Überprüft, ob Git auf dem Remote-System installiert ist."""
     stdin, stdout, stderr = ssh.exec_command("git --version")
@@ -90,7 +84,6 @@ if __name__ == "__main__":
         ssh = establish_ssh_connection(raspberry_pi_hostname, username, password)
         print("Verbindung erfolgreich hergestellt.")
 
-        update_system(ssh)
         check_and_install_git(ssh)
         clone_or_pull_repo(ssh)
 
