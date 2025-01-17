@@ -1,3 +1,12 @@
+'''
+Skript: InitDevice.py
+Beschreibung:
+Dieses Skript verbindet sich über SSH mit einem Raspberry Pi, überprüft oder installiert Git, klont oder aktualisiert ein angegebenes Git-Repository
+und stellt sicher, dass ein Unterverzeichnis im Repository existiert. Wenn das Unterverzeichnis nicht existiert, wird das Skript beendet.
+Zusätzlich wird ein Skript innerhalb des Unterverzeichnisses ausgeführt, und detaillierte Protokolle werden für alle Operationen ausgegeben.
+Autor: Thilo Rode
+'''
+
 import os
 import paramiko
 import subprocess
@@ -6,7 +15,15 @@ import subprocess
 GIT_INFO = None
 
 def get_ssh_credentials():
-    """Liest SSH-Benutzername und Passwort aus den Umgebungsvariablen."""
+    """
+    Liest SSH-Benutzernamen und Passwort aus den Umgebungsvariablen.
+
+    Rückgabe:
+        tuple: Ein Tupel mit Benutzername und Passwort.
+
+    Fehler:
+        ValueError: Wenn SSH_USERNAME oder SSH_PASSWORD nicht gesetzt sind.
+    """
     username = os.getenv("SSH_USERNAME")
     password = os.getenv("SSH_PASSWORD")
     if not username or not password:
@@ -14,9 +31,22 @@ def get_ssh_credentials():
     return username, password
 
 def establish_ssh_connection(hostname, username, password):
-    """Stellt eine SSH-Verbindung zum angegebenen Host her."""
+    """
+    Baut eine SSH-Verbindung zum angegebenen Host auf.
+
+    Argumente:
+        hostname (str): Hostname oder IP-Adresse des Zielgeräts.
+        username (str): SSH-Benutzername.
+        password (str): SSH-Passwort.
+
+    Rückgabe:
+        paramiko.SSHClient: Ein aktives SSH-Verbindungsobjekt.
+
+    Fehler:
+        ValueError: Wenn die Verbindung fehlschlägt.
+    """
     ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # Automatisch unbekannte Hosts akzeptieren
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # Unbekannte Hosts automatisch akzeptieren
     try:
         ssh.connect(hostname, username=username, password=password)
     except paramiko.ssh_exception.SSHException as e:
@@ -24,17 +54,34 @@ def establish_ssh_connection(hostname, username, password):
     return ssh
 
 def execute_command(ssh, command):
-    """Führt einen Befehl auf dem Remote-System aus und gibt die Ausgabe zurück."""
-    print(f"[COMMAND] {command}")
+    """
+    Führt einen Befehl auf dem Remote-System aus und gibt die Ausgabe zurück.
+
+    Argumente:
+        ssh (paramiko.SSHClient): Die aktive SSH-Verbindung.
+        command (str): Der auszuführende Befehl.
+
+    Rückgabe:
+        Keine
+    """
+    print(f"[BEFEHL] {command}")
     stdin, stdout, stderr = ssh.exec_command(command)
     for line in iter(stdout.readline, ""):
-        print(f"[STDOUT] {line.strip()}")
+        print(f"[AUSGABE] {line.strip()}")
     for line in iter(stderr.readline, ""):
-        print(f"[STDERR] {line.strip()}")
+        print(f"[FEHLER] {line.strip()}")
     stdout.channel.recv_exit_status()  # Warten, bis der Befehl abgeschlossen ist
 
 def is_git_installed(ssh):
-    """Überprüft, ob Git auf dem Remote-System installiert ist."""
+    """
+    Überprüft, ob Git auf dem Remote-System installiert ist.
+
+    Argumente:
+        ssh (paramiko.SSHClient): Die aktive SSH-Verbindung.
+
+    Rückgabe:
+        tuple: Ein Tupel mit einem Boolean (True, wenn installiert) und der Git-Version (oder None).
+    """
     print("[INFO] Überprüfe, ob Git auf dem Raspberry Pi installiert ist...")
     stdin, stdout, stderr = ssh.exec_command("git --version")
     git_version = stdout.read().decode().strip()
@@ -42,17 +89,33 @@ def is_git_installed(ssh):
         print(f"[INFO] Git ist installiert: {git_version}")
         return True, git_version
     else:
-        print("[WARN] Git ist nicht installiert.")
+        print("[WARNUNG] Git ist nicht installiert.")
         return False, None
 
 def install_git(ssh):
-    """Installiert Git auf dem Remote-System."""
+    """
+    Installiert Git auf dem Remote-System.
+
+    Argumente:
+        ssh (paramiko.SSHClient): Die aktive SSH-Verbindung.
+
+    Rückgabe:
+        Keine
+    """
     print("[INFO] Installiere Git auf dem Raspberry Pi...")
     execute_command(ssh, "sudo apt update && sudo apt install -y git")
     print("[INFO] Git wurde erfolgreich installiert.")
 
 def check_and_install_git(ssh):
-    """Überprüft, ob Git installiert ist, installiert es bei Bedarf und setzt Benutzername und E-Mail."""
+    """
+    Überprüft die Git-Installation auf dem Remote-System und konfiguriert Benutzername und E-Mail.
+
+    Argumente:
+        ssh (paramiko.SSHClient): Die aktive SSH-Verbindung.
+
+    Rückgabe:
+        Keine
+    """
     git_installed, git_version = is_git_installed(ssh)
     if not git_installed:
         install_git(ssh)
@@ -60,17 +123,28 @@ def check_and_install_git(ssh):
     print("[INFO] Konfiguriere Git-Benutzername und E-Mail auf dem Raspberry Pi...")
     if GIT_INFO:
         if GIT_INFO['user_name']:
-            print(f"[SETUP] Git-Benutzername: {GIT_INFO['user_name']}")
+            print(f"[KONFIGURATION] Git-Benutzername: {GIT_INFO['user_name']}")
             execute_command(ssh, f"git config --global user.name \"{GIT_INFO['user_name']}\"")
         if GIT_INFO['user_email']:
-            print(f"[SETUP] Git-E-Mail: {GIT_INFO['user_email']}")
+            print(f"[KONFIGURATION] Git-E-Mail: {GIT_INFO['user_email']}")
             execute_command(ssh, f"git config --global user.email \"{GIT_INFO['user_email']}\"")
 
 def clone_or_pull_repo(ssh):
-    """Klonen oder Aktualisieren eines Repositories über HTTPS und gibt den Pfad zurück."""
+    """
+    Klont oder aktualisiert ein Git-Repository auf dem Remote-System.
+
+    Argumente:
+        ssh (paramiko.SSHClient): Die aktive SSH-Verbindung.
+
+    Rückgabe:
+        str: Der Pfad zum Repository auf dem Remote-System.
+
+    Fehler:
+        ValueError: Wenn die Umgebungsvariable HOME_REPO nicht gesetzt ist.
+    """
     repo_url = os.getenv("HOME_REPO")
     if not repo_url:
-        raise ValueError("[ERROR] HOME_REPO muss als Umgebungsvariable gesetzt sein.")
+        raise ValueError("[FEHLER] HOME_REPO muss als Umgebungsvariable gesetzt sein.")
 
     repo_name = repo_url.split("/")[-1].replace(".git", "")
     repo_path = f"./{repo_name}"
@@ -87,18 +161,31 @@ def clone_or_pull_repo(ssh):
         print(f"[INFO] Repository {repo_name} nicht gefunden. Klone Repository...")
         execute_command(ssh, f"git clone {repo_url}")
 
-    # Branch auschecken, falls Branch-Name vorhanden ist
+    # Branch auschecken
     if GIT_INFO and GIT_INFO['branch_name']:
         branch_name = GIT_INFO['branch_name']
         print(f"[INFO] Checke Branch '{branch_name}' aus...")
         execute_command(ssh, f"cd {repo_name} && git checkout {branch_name}")
     else:
-        print("[WARN] Kein Branch-Name in GIT_INFO gefunden. Es wird der Standardbranch verwendet.")
+        print("[WARNUNG] Kein Branch-Name angegeben. Standardbranch wird verwendet.")
 
     return repo_path
 
 def install_feature(ssh, repo_path, subdirectory):
-    """Stellt sicher, dass ein Unterverzeichnis im Repository existiert, beendet script andernfalls."""
+    """
+    Stellt sicher, dass ein Unterverzeichnis im Repository existiert und führt ein Skript aus.
+
+    Argumente:
+        ssh (paramiko.SSHClient): Die aktive SSH-Verbindung.
+        repo_path (str): Der Pfad zum Git-Repository.
+        subdirectory (str): Der Name des Unterverzeichnisses.
+
+    Rückgabe:
+        str: Der Pfad zum Unterverzeichnis.
+
+    Fehler:
+        SystemExit: Wenn das Unterverzeichnis nicht existiert.
+    """
     subdirectory_path = f"{repo_path}/{subdirectory}"
     script_path = f"{subdirectory_path}/install.sh"
 
@@ -108,19 +195,21 @@ def install_feature(ssh, repo_path, subdirectory):
     subdirectory_status = stdout.read().decode().strip()
 
     if subdirectory_status == "not exists":
-        print("[ERROR] Feature existiert nicht. Das Skript wird beendet.")
+        print("[FEHLER] Unterverzeichnis existiert nicht. Skript wird beendet.")
         raise SystemExit(1)
-        
-    print(f"[INFO] Feature '{subdirectory}' gefunden.")
 
-    # Skript ausführen
-    print(f"[INFO] Führe Shell-Skript aus: {script_path}")
+    print(f"[INFO] Unterverzeichnis '{subdirectory}' gefunden. Führe Skript aus...")
     execute_command(ssh, f"bash {script_path}")
 
     return subdirectory_path
 
 def get_git_info():
-    """Ermittelt den aktuellen Branch-Namen, die URL des Repositories, den Benutzername und die E-Mail."""
+    """
+    Ermittelt Git-Metadaten wie Branch-Name, URL, Benutzername und E-Mail.
+
+    Rückgabe:
+        dict: Ein Wörterbuch mit Git-Metadaten.
+    """
     try:
         branch_name = subprocess.check_output(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.STDOUT
@@ -160,7 +249,10 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) != 3:
-        raise ValueError("Bitte geben Sie die IP-Adresse und das Unterverzeichnis als Argumente an. Beispiel: python InitDevice.py 192.168.1.100 my_subdirectory")
+        raise ValueError(
+            "Bitte geben Sie die IP-Adresse und das Unterverzeichnis als Argumente an. "
+            "Beispiel: python InitDevice.py 192.168.1.100 my_subdirectory"
+        )
 
     # Git-Informationen global speichern
     GIT_INFO = get_git_info()
@@ -186,7 +278,7 @@ if __name__ == "__main__":
         print(f"[INFO] Pfad zum Unterverzeichnis: {subdirectory_path}")
 
     except Exception as e:
-        print(f"[ERROR] Fehler bei der Verbindung oder Installation: {e}")
+        print(f"[FEHLER] Fehler bei der Verbindung oder Installation: {e}")
 
     finally:
         if 'ssh' in locals() and ssh:
