@@ -50,12 +50,13 @@ def check_and_install_git(ssh):
         install_git(ssh)
 
 def clone_or_pull_repo(ssh):
-    """Klonen oder Aktualisieren eines Repositories über HTTPS."""
+    """Klonen oder Aktualisieren eines Repositories über HTTPS und gibt den Pfad zurück."""
     repo_url = os.getenv("HOME_REPO")
     if not repo_url:
         raise ValueError("HOME_REPO muss als Umgebungsvariable gesetzt sein.")
 
     repo_name = repo_url.split("/")[-1].replace(".git", "")
+    repo_path = f"./{repo_name}"
     print(f"Überprüfe Repository: {repo_name}")
 
     # Prüfen, ob das Verzeichnis existiert
@@ -68,6 +69,8 @@ def clone_or_pull_repo(ssh):
     else:
         print(f"Repository {repo_name} nicht gefunden. Klone Repository...")
         execute_command(ssh, f"git clone {repo_url}")
+
+    return repo_path
 
 if __name__ == "__main__":
     import sys
@@ -85,7 +88,8 @@ if __name__ == "__main__":
         print("Verbindung erfolgreich hergestellt.")
 
         check_and_install_git(ssh)
-        clone_or_pull_repo(ssh)
+        repo_path = clone_or_pull_repo(ssh)
+        print(f"Repository-Pfad: {repo_path}")
 
     except Exception as e:
         print(f"Fehler bei der Verbindung oder Installation: {e}")
