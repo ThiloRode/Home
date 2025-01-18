@@ -11,6 +11,9 @@ echo "========================================"
 echo " Snapcast-Server Installation "
 echo "========================================"
 
+# Benutzer auffordern, einen Servernamen einzugeben
+read -p "Bitte geben Sie einen Namen für den Snapcast-Server ein: " SERVER_NAME
+
 # Snapcast-Server installieren
 echo "[INFO] Snapcast-Server wird installiert..."
 sudo apt install -y snapserver
@@ -24,5 +27,5 @@ sudo systemctl start snapserver
 echo "[INFO] Überprüfen des Snapcast-Server-Status..."
 sudo systemctl status snapserver --no-pager
 
-# Abschlussmeldung
-echo "[INFO] Snapcast-Server wurde erfolgreich installiert und gestartet."
+# Abschlussmeldung mit Servernamen
+echo "[INFO] Snapcast-Server '$SERVER_NAME' wurde erfolgreich installiert und gestartet."
