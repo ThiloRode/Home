@@ -4,6 +4,7 @@
 # Dieses Skript installiert Shairport Sync und konfiguriert AirPlay mit 48 kHz Resampling.
 # Autor: Thilo Rode
 
+
 set -e  # Beende das Skript bei Fehlern
 
 echo "========================================"
