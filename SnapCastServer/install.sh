@@ -12,7 +12,8 @@ echo " Snapcast-Server Installation "
 echo "========================================"
 
 # Benutzer auffordern, einen Servernamen einzugeben
-read -p "Bitte geben Sie einen Namen für den Snapcast-Server ein: " SERVER_NAME
+SERVER_NAME="Zuhause"
+
 
 # Snapcast-Server installieren
 echo "[INFO] Snapcast-Server wird installiert..."
