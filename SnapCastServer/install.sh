@@ -11,13 +11,6 @@ echo "========================================"
 echo " Snapcast-Server Installation "
 echo "========================================"
 
-# System-Updates durchführen
-echo "[INFO] Aktualisiere Paketlisten..."
-sudo apt update
-
-echo "[INFO] Aktualisiere installierte Pakete..."
-sudo apt upgrade -y
-
 # Snapcast-Server installieren
 echo "[INFO] Snapcast-Server wird installiert..."
 sudo apt install -y snapserver
