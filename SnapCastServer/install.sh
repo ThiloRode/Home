@@ -20,6 +20,14 @@ echo "[INFO] Aktivieren und Starten des Snapcast-Servers..."
 sudo systemctl enable snapserver
 sudo systemctl start snapserver
 
+# Überprüfen, ob der Snapcast-Server erfolgreich gestartet wurde
+if systemctl is-active --quiet snapserver; then
+    echo "[INFO] Snapcast-Server läuft erfolgreich."
+else
+    echo "[FEHLER] Snapcast-Server konnte nicht gestartet werden." >&2
+    exit 1
+fi
+
 # Status anzeigen
 echo "[INFO] Überprüfen des Snapcast-Server-Status..."
 sudo systemctl status snapserver --no-pager
