@@ -13,7 +13,7 @@ echo "========================================"
 
 # Snapcast-Server installieren
 echo "[INFO] Snapcast-Server wird installiert..."
-sudo apt install -y snapserver
+sudo apt install -y snapserver 2>/dev/null
 
 # Snapcast-Server aktivieren und starten
 echo "[INFO] Aktivieren und Starten des Snapcast-Servers..."
