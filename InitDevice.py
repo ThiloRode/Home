@@ -2,8 +2,8 @@
 Skript: InitDevice.py
 Beschreibung:
 Dieses Skript verbindet sich über SSH mit einem Raspberry Pi, überprüft oder installiert Git, klont oder aktualisiert ein angegebenes Git-Repository
-und stellt sicher, dass ein Unterverzeichnis im Repository existiert. Wenn das Unterverzeichnis nicht existiert, wird das Skript beendet.
-Zusätzlich wird ein Skript innerhalb des Unterverzeichnisses ausgeführt, und detaillierte Protokolle werden für alle Operationen ausgegeben.
+und stellt sicher, dass ein Feature im Repository existiert. Wenn das Feature nicht existiert, wird das Skript beendet.
+Zusätzlich wird ein Skript innerhalb des Features ausgeführt, und detaillierte Protokolle werden für alle Operationen ausgegeben.
 Autor: Thilo Rode
 '''
 
@@ -171,37 +171,37 @@ def clone_or_pull_repo(ssh):
 
     return repo_path
 
-def install_feature(ssh, repo_path, subdirectory):
+def install_feature(ssh, repo_path, feature):
     """
-    Stellt sicher, dass ein Unterverzeichnis im Repository existiert und führt ein Skript aus.
+    Stellt sicher, dass ein Verzeichnis für ein Feature im Repository existiert und führt ein Shell-Skript zur Installation aus.
 
     Argumente:
         ssh (paramiko.SSHClient): Die aktive SSH-Verbindung.
         repo_path (str): Der Pfad zum Git-Repository.
-        subdirectory (str): Der Name des Unterverzeichnisses.
+        feature (str): Der Name des Features.
 
     Rückgabe:
-        str: Der Pfad zum Unterverzeichnis.
+        str: Der Pfad zum Feature-Verzeichnis.
 
     Fehler:
-        SystemExit: Wenn das Unterverzeichnis nicht existiert.
+        SystemExit: Wenn das Feature nicht existiert.
     """
-    subdirectory_path = f"{repo_path}/{subdirectory}"
-    script_path = f"{subdirectory_path}/install.sh"
+    feature_path = f"{repo_path}/{feature}"
+    script_path = f"{feature_path}/install.sh"
 
-    print(f"[INFO] Überprüfe, ob das Unterverzeichnis '{subdirectory}' existiert...")
-    # Prüfen, ob das Unterverzeichnis existiert
-    stdin, stdout, stderr = ssh.exec_command(f"[ -d {subdirectory_path} ] && echo 'exists' || echo 'not exists'")
-    subdirectory_status = stdout.read().decode().strip()
+    print(f"[INFO] Überprüfe, ob das Feature '{feature}' existiert...")
+    # Prüfen, ob das Feature existiert
+    stdin, stdout, stderr = ssh.exec_command(f"[ -d {feature_path} ] && echo 'exists' || echo 'not exists'")
+    feature_status = stdout.read().decode().strip()
 
-    if subdirectory_status == "not exists":
-        print("[FEHLER] Unterverzeichnis existiert nicht. Skript wird beendet.")
+    if feature_status == "not exists":
+        print("[FEHLER] Feature existiert nicht. Skript wird beendet.")
         raise SystemExit(1)
 
-    print(f"[INFO] Unterverzeichnis '{subdirectory}' gefunden. Führe Skript aus...")
+    print(f"[INFO] Feature '{feature}' gefunden. Führe Skript aus...")
     execute_command(ssh, f"bash {script_path}")
 
-    return subdirectory_path
+    return feature_path
 
 def get_git_info():
     """
@@ -250,8 +250,8 @@ if __name__ == "__main__":
 
     if len(sys.argv) != 3:
         raise ValueError(
-            "Bitte geben Sie die IP-Adresse und das Unterverzeichnis als Argumente an. "
-            "Beispiel: python InitDevice.py 192.168.1.100 my_subdirectory"
+            "Bitte geben Sie die IP-Adresse und das Feature als Argumente an. "
+            "Beispiel: python InitDevice.py 192.168.1.100 my_feature"
         )
 
     # Git-Informationen global speichern
@@ -263,7 +263,7 @@ if __name__ == "__main__":
     print(f"[INFO] E-Mail: {GIT_INFO['user_email']}")
 
     raspberry_pi_hostname = sys.argv[1]
-    subdirectory = sys.argv[2]
+    feature = sys.argv[2]
 
     username, password = get_ssh_credentials()
 
@@ -274,8 +274,8 @@ if __name__ == "__main__":
 
         check_and_install_git(ssh)
         repo_path = clone_or_pull_repo(ssh)
-        subdirectory_path = install_feature(ssh, repo_path, subdirectory)
-        print(f"[INFO] Pfad zum Unterverzeichnis: {subdirectory_path}")
+        feature_path = install_feature(ssh, repo_path, feature)
+        print(f"[INFO] Pfad zum Feature: {feature_path}")
 
     except Exception as e:
         print(f"[FEHLER] Fehler bei der Verbindung oder Installation: {e}")

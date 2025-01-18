@@ -1,22 +1,22 @@
 # README
 
-## Projektübersicht
-Dieses Projekt umfasst ein Python-Skript (`InitDevice.py`) und ein Bash-Skript (`install.sh`) zur Verwaltung und Aktualisierung eines Raspberry Pi sowie zur Synchronisierung mit einem Git-Repository.
+## Projektbeschreibung
+Dieses Projekt bietet ein Python-Skript (`InitDevice.py`) und ein Bash-Skript (`install.sh`), um einen Raspberry Pi über SSH zu verwalten. Es ermöglicht die Installation und Konfiguration von Git, das Klonen oder Aktualisieren eines Git-Repositorys sowie die Verwaltung von Features innerhalb des Repositorys.
 
 ### 1. Python-Skript: `InitDevice.py`
 #### Funktionen:
-- **SSH-Verbindung herstellen:** Verbindet sich mit einem Raspberry Pi unter Verwendung von Umgebungsvariablen für den Benutzernamen und das Passwort.
-- **Git-Installation überprüfen und konfigurieren:** Prüft, ob Git installiert ist, installiert es bei Bedarf und konfiguriert Git-Benutzernamen und E-Mail.
-- **Repository klonen oder aktualisieren:** Klont ein Git-Repository oder aktualisiert es, falls es bereits vorhanden ist.
-- **Unterverzeichnis verwalten:** Stellt sicher, dass ein spezifisches Unterverzeichnis im Repository existiert, und führt ein darin enthaltenes Shell-Skript aus.
+- **SSH-Verbindung herstellen:** Verbindet sich mit einem Raspberry Pi unter Verwendung von Umgebungsvariablen für Benutzername und Passwort.
+- **Git installieren und konfigurieren:** Prüft, ob Git installiert ist, installiert es bei Bedarf und konfiguriert Benutzername und E-Mail basierend auf lokalen Git-Einstellungen.
+- **Repository klonen oder aktualisieren:** Klont ein Git-Repository oder führt ein `git pull` aus, falls das Repository bereits vorhanden ist.
+- **Feature verwalten:** Stellt sicher, dass ein bestimmtes Feature-Verzeichnis im Repository existiert, und führt ein Skript innerhalb dieses Verzeichnisses aus.
 
 #### Nutzung:
 ```bash
-python3 InitDevice.py <IP-Adresse> <Unterverzeichnis>
+python3 InitDevice.py <IP-Adresse> <Feature-Name>
 ```
 Beispiel:
 ```bash
-python3 InitDevice.py 192.168.1.139 my_subdirectory
+python3 InitDevice.py 192.168.1.139 UpdateFeature
 ```
 
 #### Voraussetzungen:
@@ -31,8 +31,8 @@ python3 InitDevice.py 192.168.1.139 my_subdirectory
 
 ### 2. Bash-Skript: `install.sh`
 #### Funktionen:
-- Aktualisiert die Paketlisten auf dem Raspberry Pi.
-- Installiert die neuesten Versionen aller Pakete.
+- Aktualisiert die Paketlisten des Raspberry Pi.
+- Führt ein Upgrade aller installierten Pakete durch.
 - Entfernt veraltete oder nicht mehr benötigte Pakete.
 
 #### Nutzung:
@@ -41,8 +41,9 @@ bash install.sh
 ```
 
 ### 3. Beispielablauf
-1. Führen Sie das Python-Skript aus, um den Raspberry Pi zu konfigurieren und das Repository zu synchronisieren.
-2. Verwenden Sie das Bash-Skript, um das System des Raspberry Pi zu aktualisieren.
+1. **SSH-Zugang einrichten:** Stellen Sie sicher, dass die Umgebungsvariablen korrekt gesetzt sind.
+2. **Python-Skript ausführen:** Führen Sie `InitDevice.py` aus, um Git zu installieren, das Repository zu synchronisieren und ein spezifisches Feature zu verwalten.
+3. **Bash-Skript ausführen:** Verwenden Sie `install.sh`, um das System des Raspberry Pi zu aktualisieren.
 
 ### 4. Struktur
 ```
@@ -56,5 +57,5 @@ bash install.sh
 Thilo Rode
 
 ---
-Bitte wenden Sie sich bei Fragen oder Problemen an den Autor. Verbesserungsvorschläge sind willkommen!
+Bei Fragen oder Problemen wenden Sie sich bitte an den Autor. Vorschläge zur Verbesserung sind willkommen!
 
