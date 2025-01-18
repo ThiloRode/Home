@@ -11,13 +11,16 @@ echo "========================================"
 echo " Snapcast-Server Installation "
 echo "========================================"
 
-# Benutzer auffordern, einen Servernamen einzugeben
+# Servername festlegen
 SERVER_NAME="Zuhause"
-
 
 # Snapcast-Server installieren
 echo "[INFO] Snapcast-Server wird installiert..."
 sudo apt install -y snapserver
+
+# Servernamen in der Konfigurationsdatei setzen
+echo "[INFO] Konfiguriere Snapcast-Server mit dem Namen '$SERVER_NAME'..."
+sudo sed -i "s/^#?servername=.*/servername=$SERVER_NAME/" /etc/snapserver.conf
 
 # Snapcast-Server aktivieren und starten
 echo "[INFO] Aktivieren und Starten des Snapcast-Servers..."
