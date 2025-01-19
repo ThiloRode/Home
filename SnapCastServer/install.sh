@@ -13,10 +13,10 @@ echo "========================================"
 echo "Configuring Snapserver..."
 CONFIG_FILE="/etc/snapserver.conf"
 
-sudo bash -c "cat > $CONFIG_FILE" <<EOF
+#sudo bash -c "cat > $CONFIG_FILE" <<EOF
 #[stream]
 #source = pipe:///tmp/snapfifo?name=AirPlay
-EOF
+#EOF
 
 # Snapserver starten und aktivieren
 echo "Starting and enabling Snapserver service..."
