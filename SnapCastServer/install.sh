@@ -10,6 +10,10 @@ set -e  # Beende das Skript bei Fehlern
 echo "========================================"
 echo " Snapcast-Server Installation "
 echo "========================================"
+
+echo "Updating system and installing Snapserver..."
+#sudo apt update && sudo apt upgrade -y
+sudo apt install -y snapserver
 echo "Configuring Snapserver..."
 CONFIG_FILE="/etc/snapserver.conf"
 
