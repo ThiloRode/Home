@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script: install_airplay.sh
+# Script: install.sh
 # Beschreibung:
 # Autor: Thilo Rode
 
