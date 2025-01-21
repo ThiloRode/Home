@@ -11,51 +11,56 @@ echo "========================================"
 echo " Bluetooth Installation "
 echo "========================================"
 
+#!/bin/bash
 
-# Installation der benötigten Pakete
-echo "Installing required packages..."
+# Bluetooth-Pakete installieren
 sudo apt install -y \
     bluez \
     pulseaudio \
     pulseaudio-module-bluetooth \
-    python3-pip \
-    python3-dbus \
-    dbus \
     alsa-utils
 
-# Bluetooth-Dienste aktivieren
-echo "Enabling and starting Bluetooth service..."
+# Bluetooth-Dienste aktivieren und konfigurieren
+echo "Configuring Bluetooth..."
 sudo systemctl enable bluetooth
 sudo systemctl start bluetooth
 
 # Pulseaudio Bluetooth-Modul aktivieren
-echo "Loading Pulseaudio Bluetooth module..."
+echo "Loading Pulseaudio Bluetooth modules..."
+pactl load-module module-bluetooth-policy
 pactl load-module module-bluetooth-discover
 
-# Konfiguration von Pulseaudio für Bluetooth-Audio
-echo "Configuring Pulseaudio for Bluetooth audio..."
-cat <<EOF | sudo tee /etc/pulse/default.pa > /dev/null
-### Load Bluetooth modules
-load-module module-bluetooth-policy
-load-module module-bluetooth-discover
-EOF
-
-# Neuladen von Pulseaudio
-echo "Restarting Pulseaudio..."
-pulseaudio --kill
-pulseaudio --start
-
-# Pairing-Modus für Bluetooth aktivieren
-echo "Configuring Bluetooth in pairable mode..."
-sudo bluetoothctl <<EOF
+# Bluetooth-Modus einstellen
+echo "Setting up Bluetooth pairing mode..."
+bluetoothctl <<EOF
 power on
 discoverable on
 pairable on
-agent on
+agent NoInputNoOutput
 default-agent
 EOF
 
-# Hinweis für den Benutzer
-echo "Setup complete. Your Raspberry Pi is now a Bluetooth receiver."
-echo "You can pair devices by searching for your Raspberry Pi in the Bluetooth settings of your device."
+echo "Bluetooth is now discoverable and pairable. Waiting for a device to connect..."
 
+# Warten auf Verbindung eines Geräts
+while true; do
+    connected=$(bluetoothctl info | grep -i "Connected: yes")
+    if [ ! -z "$connected" ]; then
+        echo "Device connected. Setting up as audio sink..."
+        
+        # Standard-Audioausgabe konfigurieren
+        device=$(bluetoothctl devices | grep Device | awk '{print $2}')
+        sink=$(pactl list sinks short | grep bluez_sink | awk '{print $1}')
+        
+        if [ ! -z "$sink" ]; then
+            pacmd set-default-sink "$sink"
+            echo "Audio sink set for device $device."
+            echo "Bluetooth audio is now active. Enjoy streaming!"
+        else
+            echo "No Bluetooth sink found. Please check your Pulseaudio setup."
+        fi
+
+        break
+    fi
+    sleep 5
+done
