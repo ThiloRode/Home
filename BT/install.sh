@@ -27,6 +27,8 @@ install_bluetooth() {
     # Bluetooth Audio ALSA Backend (bluez-alsa-utils)
     sudo apt update
     sudo apt install -y --no-install-recommends bluez-tools bluez-alsa-utils
+    sudo apt install pulseaudio pulseaudio-module-bluetooth
+
 
     # Bluetooth settings
     sudo tee /etc/bluetooth/main.conf >/dev/null <<'EOF'
