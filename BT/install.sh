@@ -1,27 +1,28 @@
 #!/bin/bash
 # Script: installt.sh
-# Beschreibung:
-# Dieses Skript installiert den Bluetooth auf einem Debian-basierten System (z. B. Raspberry Pi).
-# Autor: Thilo Rode
+# Description: Installs Bluetooth and related packages on a Raspberry Pi
+# Author: Thilo Rode
 
-set -e  # Beende das Skript bei Fehlern
+set -e  # Exit on error
 
-# Header anzeigen
+# Set environment for non-interactive installation
+export DEBIAN_FRONTEND=noninteractive
+
+# Header
 echo "========================================"
 echo " Bluetooth Installation "
 echo "========================================"
 
-
 install_bluetooth() {
-    
+    echo "Updating package lists..."
+    sudo apt-get update
 
-    # Bluetooth Audio ALSA Backend (bluez-alsa-utils)
-    sudo apt update
-    sudo apt install -y --no-install-recommends bluez-tools bluez-alsa-utils
-    sudo apt install pulseaudio pulseaudio-module-bluetooth
+    echo "Installing Bluetooth tools and dependencies..."
+    sudo apt-get -o Dpkg::Options::="--force-confdef" \
+                 -o Dpkg::Options::="--force-confold" \
+                 install -y bluez-tools bluez-alsa-utils pulseaudio pulseaudio-module-bluetooth
 
-
-    # Bluetooth settings
+    echo "Configuring Bluetooth settings..."
     sudo tee /etc/bluetooth/main.conf >/dev/null <<'EOF'
 [General]
 Class = 0x200414
@@ -31,7 +32,7 @@ DiscoverableTimeout = 0
 AutoEnable=true
 EOF
 
-    # Bluetooth Agent
+    echo "Setting up Bluetooth agent..."
     sudo tee /etc/systemd/system/bt-agent@.service >/dev/null <<'EOF'
 [Unit]
 Description=Bluetooth Agent
@@ -50,10 +51,11 @@ KillSignal=SIGUSR1
 [Install]
 WantedBy=multi-user.target
 EOF
+
     sudo systemctl daemon-reload
     sudo systemctl enable bt-agent@hci0.service
 
-    # Bluetooth udev script
+    echo "Creating udev rules for Bluetooth..."
     sudo tee /usr/local/bin/bluetooth-udev >/dev/null <<'EOF'
 #!/bin/bash
 if [[ ! $NAME =~ ^\"([0-9A-F]{2}[:-]){5}([0-9A-F]{2})\"$ ]]; then exit 0; fi
@@ -62,13 +64,7 @@ action=$(expr "$ACTION" : "\([a-zA-Z]\+\).*")
 
 if [ "$action" = "add" ]; then
     bluetoothctl discoverable off
-    # disconnect wifi to prevent dropouts
-    #ifconfig wlan0 down &
-fi
-
-if [ "$action" = "remove" ]; then
-    # reenable wifi
-    #ifconfig wlan0 up &
+elif [ "$action" = "remove" ]; then
     bluetoothctl discoverable on
 fi
 EOF
@@ -80,12 +76,8 @@ KERNEL=="input[0-9]*", RUN+="/usr/local/bin/bluetooth-udev"
 EOF
 }
 
-
-trap cleanup EXIT
-
-echo "Raspberry Pi Audio Receiver"
-
+echo "Starting installation..."
 install_bluetooth
 
+echo "Rebooting to apply changes..."
 sudo reboot
-
