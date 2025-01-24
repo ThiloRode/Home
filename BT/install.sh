@@ -11,7 +11,13 @@ echo "========================================"
 echo " Bluetooth Installation "
 echo "========================================"
 
+#!/bin/bash
 
+set -e
+
+NQPTP_VERSION="1.2.4"
+SHAIRPORT_SYNC_VERSION="4.3.2"
+TMP_DIR=""
 
 cleanup() {
     if [ -d "${TMP_DIR}" ]; then
@@ -21,8 +27,11 @@ cleanup() {
 
 
 
+
+
 install_bluetooth() {
-    
+    read -p "Do you want to install Bluetooth Audio (ALSA)? [y/N] " REPLY
+    if [[ ! "$REPLY" =~ ^(yes|y|Y)$ ]]; then return; fi
 
     # Bluetooth Audio ALSA Backend (bluez-alsa-utils)
     sudo apt update
@@ -87,16 +96,6 @@ EOF
 SUBSYSTEM=="input", GROUP="input", MODE="0660"
 KERNEL=="input[0-9]*", RUN+="/usr/local/bin/bluetooth-udev"
 EOF
-
-# Start bluetoothctl
-bluetoothctl <<EOF
-power on
-discoverable on
-pairable on
-agent NoInputNoOutput
-default-agent
-EOF
-
 }
 
 
