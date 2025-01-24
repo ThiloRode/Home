@@ -11,51 +11,55 @@ echo "========================================"
 echo " Bluetooth Installation "
 echo "========================================"
 
+echo "Starting setup for Raspberry Pi as a Bluetooth audio adapter..."
 
-# Installation der benötigten Pakete
-echo "Installing required packages..."
-sudo apt install -y \
-    bluez \
-    pulseaudio \
-    pulseaudio-module-bluetooth \
-    python3-pip \
-    python3-dbus \
-    dbus \
-    alsa-utils
+# Update and upgrade system
+echo "Updating system..."
+sudo apt update && sudo apt upgrade -y
 
-# Bluetooth-Dienste aktivieren
+# Install required packages
+echo "Installing necessary packages..."
+sudo apt install -y bluealsa pulseaudio-module-bluetooth pavucontrol alsa-utils bluetooth
+
+# Enable and start Bluetooth service
 echo "Enabling and starting Bluetooth service..."
 sudo systemctl enable bluetooth
 sudo systemctl start bluetooth
 
-# Pulseaudio Bluetooth-Modul aktivieren
-echo "Loading Pulseaudio Bluetooth module..."
-pactl load-module module-bluetooth-discover
+# Configure PulseAudio for Bluetooth
+echo "Configuring PulseAudio..."
+PA_CONFIG="/etc/pulse/default.pa"
+if ! grep -q "load-module module-bluetooth-discover" "$PA_CONFIG"; then
+    echo "Adding Bluetooth discover module to PulseAudio configuration..."
+    echo "load-module module-bluetooth-discover" | sudo tee -a "$PA_CONFIG"
+else
+    echo "Bluetooth module already configured in PulseAudio."
+fi
 
-# Konfiguration von Pulseaudio für Bluetooth-Audio
-echo "Configuring Pulseaudio for Bluetooth audio..."
-cat <<EOF | sudo tee /etc/pulse/default.pa > /dev/null
-### Load Bluetooth modules
-load-module module-bluetooth-policy
-load-module module-bluetooth-discover
-EOF
-
-# Neuladen von Pulseaudio
-echo "Restarting Pulseaudio..."
+# Restart PulseAudio
+echo "Restarting PulseAudio..."
 pulseaudio --kill
 pulseaudio --start
 
-# Pairing-Modus für Bluetooth aktivieren
-echo "Configuring Bluetooth in pairable mode..."
-sudo bluetoothctl <<EOF
+# Configure Bluetooth pairing
+echo "Setting up Bluetooth pairing..."
+sudo bluetoothctl << EOF
 power on
 discoverable on
 pairable on
-agent on
-default-agent
 EOF
 
-# Hinweis für den Benutzer
-echo "Setup complete. Your Raspberry Pi is now a Bluetooth receiver."
-echo "You can pair devices by searching for your Raspberry Pi in the Bluetooth settings of your device."
+# Optional: Enable PulseAudio system mode (if needed)
+# Uncomment the following lines if you need PulseAudio in system mode
+# echo "Enabling PulseAudio system-wide..."
+# sudo sed -i 's/^#autospawn = yes/autospawn = no/' /etc/pulse/client.conf
+# sudo systemctl restart pulseaudio
 
+# Instructions for user
+echo "Setup complete! You can now pair your Bluetooth device."
+echo "Use 'bluetoothctl' to manage Bluetooth connections manually."
+echo "You may need to open 'pavucontrol' to select the Bluetooth audio device as the output."
+
+# Finish
+echo "Rebooting system to apply changes..."
+sudo reboot
