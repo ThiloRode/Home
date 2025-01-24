@@ -85,6 +85,16 @@ EOF
 SUBSYSTEM=="input", GROUP="input", MODE="0660"
 KERNEL=="input[0-9]*", RUN+="/usr/local/bin/bluetooth-udev"
 EOF
+
+# Start bluetoothctl
+bluetoothctl <<EOF
+power on
+discoverable on
+pairable on
+agent NoInputNoOutput
+default-agent
+EOF
+
 }
 
 
