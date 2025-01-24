@@ -108,5 +108,3 @@ echo "Raspberry Pi Audio Receiver"
 verify_os
 
 install_bluetooth
-
-
