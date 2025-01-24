@@ -11,23 +11,6 @@ echo "========================================"
 echo " Bluetooth Installation "
 echo "========================================"
 
-#!/bin/bash
-
-set -e
-
-NQPTP_VERSION="1.2.4"
-SHAIRPORT_SYNC_VERSION="4.3.2"
-TMP_DIR=""
-
-cleanup() {
-    if [ -d "${TMP_DIR}" ]; then
-        rm -rf "${TMP_DIR}"
-    fi
-}
-
-
-
-
 
 install_bluetooth() {
     read -p "Do you want to install Bluetooth Audio (ALSA)? [y/N] " REPLY
