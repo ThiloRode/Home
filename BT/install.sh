@@ -1,68 +1,61 @@
 #!/bin/bash
+# Script: installt.sh
+# Beschreibung:
+# Dieses Skript installiert den Bluetooth auf einem Debian-basierten System (z. B. Raspberry Pi).
+# Autor: Thilo Rode
 
-# Farben für Ausgabe
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-NC='\033[0m' # Keine Farbe
+set -e  # Beende das Skript bei Fehlern
 
-echo -e "${GREEN}1. System aktualisieren und benötigte Pakete installieren...${NC}"
-sudo apt update && sudo apt upgrade -y
+# Header anzeigen
+echo "========================================"
+echo " Bluetooth Installation "
+echo "========================================"
+
+
+# Installation der benötigten Pakete
+echo "Installing required packages..."
 sudo apt install -y \
     bluez \
     pulseaudio \
     pulseaudio-module-bluetooth \
+    python3-pip \
+    python3-dbus \
+    dbus \
     alsa-utils
 
-echo -e "${GREEN}2. Bluetooth-Dienst aktivieren und starten...${NC}"
+# Bluetooth-Dienste aktivieren
+echo "Enabling and starting Bluetooth service..."
 sudo systemctl enable bluetooth
 sudo systemctl start bluetooth
 
-echo -e "${GREEN}3. Pulseaudio stoppen und Bereinigung durchführen...${NC}"
+# Pulseaudio Bluetooth-Modul aktivieren
+echo "Loading Pulseaudio Bluetooth module..."
+pactl load-module module-bluetooth-discover
+
+# Konfiguration von Pulseaudio für Bluetooth-Audio
+echo "Configuring Pulseaudio for Bluetooth audio..."
+cat <<EOF | sudo tee /etc/pulse/default.pa > /dev/null
+### Load Bluetooth modules
+load-module module-bluetooth-policy
+load-module module-bluetooth-discover
+EOF
+
+# Neuladen von Pulseaudio
+echo "Restarting Pulseaudio..."
 pulseaudio --kill
-pkill -9 pulseaudio
-rm -rf /run/pulse /var/run/pulse ~/.config/pulse
-mkdir -p ~/.config/pulse
-touch ~/.config/pulse/cookie
-chmod 600 ~/.config/pulse/cookie
-
-echo -e "${GREEN}4. Pulseaudio-Konfiguration aktualisieren...${NC}"
-sudo sed -i '/load-module module-bluetooth-policy/d' /etc/pulse/default.pa
-sudo sed -i '/load-module module-bluetooth-discover/d' /etc/pulse/default.pa
-echo "load-module module-bluetooth-policy" | sudo tee -a /etc/pulse/default.pa
-echo "load-module module-bluetooth-discover" | sudo tee -a /etc/pulse/default.pa
-
-echo -e "${GREEN}5. Pulseaudio neu starten...${NC}"
 pulseaudio --start
 
-echo -e "${GREEN}6. Bluetooth-Modus konfigurieren...${NC}"
-bluetoothctl <<EOF
+# Pairing-Modus für Bluetooth aktivieren
+echo "Configuring Bluetooth in pairable mode..."
+sudo bluetoothctl <<EOF
 power on
 discoverable on
 pairable on
-agent NoInputNoOutput
+agent on
 default-agent
 EOF
 
-echo -e "${GREEN}7. Warten auf Bluetooth-Verbindung...${NC}"
-while true; do
-    connected=$(bluetoothctl info | grep -i "Connected: yes")
-    if [ ! -z "$connected" ]; then
-        echo -e "${GREEN}Gerät verbunden! Konfiguriere Audio-Ausgabe...${NC}"
-        
-        device=$(bluetoothctl devices | grep Device | awk '{print $2}')
-        echo -e "${GREEN}Verbunden mit Gerät: $device${NC}"
+# Hinweis für den Benutzer
+echo "Setup complete. Your Raspberry Pi is now a Bluetooth receiver."
+echo "You can pair devices by searching for your Raspberry Pi in the Bluetooth settings of your device."
 
-        sink=$(pactl list sinks short | grep bluez_sink | awk '{print $1}')
-        if [ ! -z "$sink" ]; then
-            pacmd set-default-sink "$sink"
-            echo -e "${GREEN}Audio-Sink konfiguriert. Bluetooth-Audio ist aktiv.${NC}"
-        else
-            echo -e "${RED}Kein Bluetooth-Audio-Sink gefunden. Überprüfe Pulseaudio-Konfiguration.${NC}"
-        fi
-
-        break
-    fi
-    sleep 5
-done
-
-echo -e "${GREEN}Fertig! Bluetooth-Audio sollte jetzt funktionieren.${NC}"
