@@ -19,21 +19,6 @@ cleanup() {
     fi
 }
 
-verify_os() {
-    MSG="Unsupported OS: Raspberry Pi OS 12 (bookworm) is required."
-
-    if [ ! -f /etc/os-release ]; then
-        echo $MSG
-        exit 1
-    fi
-
-    . /etc/os-release
-
-    if [ "$ID" != "debian" && "$ID" != "raspbian" ] || [ "$VERSION_ID" != "12" ]; then
-        echo $MSG
-        exit 1
-    fi
-}
 
 
 install_bluetooth() {
@@ -107,6 +92,5 @@ trap cleanup EXIT
 
 echo "Raspberry Pi Audio Receiver"
 
-verify_os
 install_bluetooth
 
