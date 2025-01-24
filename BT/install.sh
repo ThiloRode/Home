@@ -33,6 +33,7 @@ verify_os() {
         echo $MSG
         exit 1
     fi
+}
 
 
 install_bluetooth() {
@@ -101,12 +102,11 @@ KERNEL=="input[0-9]*", RUN+="/usr/local/bin/bluetooth-udev"
 EOF
 }
 
+
 trap cleanup EXIT
 
 echo "Raspberry Pi Audio Receiver"
 
 verify_os
-
 install_bluetooth
 
-EOF
