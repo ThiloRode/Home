@@ -13,8 +13,7 @@ echo "========================================"
 
 
 install_bluetooth() {
-    read -p "Do you want to install Bluetooth Audio (ALSA)? [y/N] " REPLY
-    if [[ ! "$REPLY" =~ ^(yes|y|Y)$ ]]; then return; fi
+    
 
     # Bluetooth Audio ALSA Backend (bluez-alsa-utils)
     sudo apt update
