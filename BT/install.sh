@@ -11,15 +11,19 @@ echo "========================================"
 echo " Bluetooth Installation "
 echo "========================================"
 
+#!/bin/bash
+
+# Script to set up Raspberry Pi as a Bluetooth audio adapter using PulseAudio
+
 echo "Starting setup for Raspberry Pi as a Bluetooth audio adapter..."
 
 # Update and upgrade system
 echo "Updating system..."
 sudo apt update && sudo apt upgrade -y
 
-# Install required packages
+# Install necessary packages
 echo "Installing necessary packages..."
-sudo apt install -y bluealsa pulseaudio-module-bluetooth pavucontrol alsa-utils bluetooth
+sudo apt install -y pulseaudio pulseaudio-module-bluetooth pavucontrol alsa-utils bluetooth bluez-tools
 
 # Enable and start Bluetooth service
 echo "Enabling and starting Bluetooth service..."
@@ -41,25 +45,21 @@ echo "Restarting PulseAudio..."
 pulseaudio --kill
 pulseaudio --start
 
-# Configure Bluetooth pairing
+# Set up Bluetooth pairing
 echo "Setting up Bluetooth pairing..."
 sudo bluetoothctl << EOF
 power on
 discoverable on
 pairable on
+agent on
+default-agent
 EOF
 
-# Optional: Enable PulseAudio system mode (if needed)
-# Uncomment the following lines if you need PulseAudio in system mode
-# echo "Enabling PulseAudio system-wide..."
-# sudo sed -i 's/^#autospawn = yes/autospawn = no/' /etc/pulse/client.conf
-# sudo systemctl restart pulseaudio
-
 # Instructions for user
-echo "Setup complete! You can now pair your Bluetooth device."
-echo "Use 'bluetoothctl' to manage Bluetooth connections manually."
-echo "You may need to open 'pavucontrol' to select the Bluetooth audio device as the output."
+echo "Setup complete!"
+echo "1. Use 'bluetoothctl' to pair and connect your Bluetooth audio device."
+echo "2. Use 'pavucontrol' to select the Bluetooth device as the default audio output."
 
-# Finish
+# Optional: Reboot system
 echo "Rebooting system to apply changes..."
 sudo reboot
