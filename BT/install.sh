@@ -94,3 +94,5 @@ echo "Raspberry Pi Audio Receiver"
 
 install_bluetooth
 
+sudo reboot
+
