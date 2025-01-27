@@ -89,3 +89,6 @@ echo "Starte Snapserver neu..."
 sudo systemctl restart snapserver && echo "Snapserver erfolgreich neu gestartet."
 
 echo "Setup abgeschlossen. Bluetooth-Audio wird ins FIFO geleitet."
+
+echo "Rebooting to apply changes..."
+sudo reboot
