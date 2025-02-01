@@ -29,4 +29,3 @@ sudo systemctl restart snapserver
 
 echo "Snapserver installation and configuration complete!"
 
-sudo reboot
