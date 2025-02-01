@@ -12,7 +12,7 @@ export DEBIAN_FRONTEND=noninteractive
 echo "========================================"
 echo "Airplay and Snapcast Connection Installation"
 echo "========================================"
-
+#!/bin/bash
 
 CONFIG_FILE="/etc/snapserver.conf"
 BACKUP_FILE="/etc/snapserver.conf.bak"
