@@ -80,4 +80,5 @@ echo "Starting installation..."
 install_bluetooth
 
 echo "Rebooting to apply changes..."
-sudo reboot
+systemctl --user restart pulseaudio
+
