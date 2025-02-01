@@ -43,9 +43,10 @@ pi_ip = sys.argv[1]
 
 # Liste der Features, die installiert werden sollen
 features = [
-    "APSnapServerConnect",
-    "Feature2",
-    "Feature3"
+    "Update",
+    "Airplay",
+    "SnapCastServer",
+    "APSnapServerConnect"
 ]
 
 # Loop über alle Features und ausführen
