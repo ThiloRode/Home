@@ -12,7 +12,7 @@ export DEBIAN_FRONTEND=noninteractive
 echo "========================================"
 echo "Airplay and Snapcast Connection Installation"
 echo "========================================"
-#!/bin/bash
+
 
 CONFIG_FILE="/etc/snapserver.conf"
 BACKUP_FILE="/etc/snapserver.conf.bak"
@@ -23,8 +23,8 @@ if [ ! -f "$BACKUP_FILE" ]; then
     echo "✅ Backup erstellt: $BACKUP_FILE"
 fi
 
-# 1️⃣ Ersetze die Zeile mit "airplay: airplay:"
-sudo sed -i 's|^airplay: airplay:.*|airplay: airplay:///usr/bin/shairport-sync?name=ZuhauseAirplay&dryout_ms=2000&port=5000|' "$CONFIG_FILE"
+# 1️⃣ Ersetze die auskommentierte "airplay:" Zeile mit der richtigen Konfiguration
+sudo sed -i 's|^# airplay: airplay://.*|airplay: airplay:///usr/bin/shairport-sync?name=ZuhauseAirplay&dryout_ms=2000&port=5000|' "$CONFIG_FILE"
 
 # 2️⃣ Prüfen, ob "source = airplay:///shairport-sync?name=Airplay" bereits existiert
 if ! grep -q "^source = airplay:///shairport-sync?name=Airplay" "$CONFIG_FILE"; then
@@ -38,3 +38,4 @@ fi
 # Snapserver neu starten
 sudo systemctl restart snapserver
 echo "✅ Snapserver neu gestartet."
+
