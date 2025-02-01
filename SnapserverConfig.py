@@ -1,6 +1,37 @@
 import subprocess
 import sys
 
+def run_feature_install(ip, feature):
+    """
+    Führt InitDevice.py mit der gegebenen IP und dem Feature aus und gibt alle Terminalausgaben in Echtzeit aus.
+    
+    :param ip: Die IP-Adresse des Raspberry Pi
+    :param feature: Das zu installierende Feature
+    """
+    print(f"🚀 Starte Installation von '{feature}' auf {ip} ...")
+
+    process = subprocess.Popen(
+        ["python3", "InitDevice.py", ip, feature],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    # In Echtzeit die Ausgabe des Skripts übernehmen
+    for line in process.stdout:
+        print(line, end="")  # Direkt ausgeben
+
+    for line in process.stderr:
+        print(line, end="")  # Fehlerausgabe ebenfalls direkt übernehmen
+
+    # Warten, bis das Skript beendet ist
+    process.wait()
+
+    if process.returncode == 0:
+        print(f"✅ Installation von '{feature}' erfolgreich abgeschlossen.")
+    else:
+        print(f"❌ Fehler bei der Installation von '{feature}' (Exit-Code: {process.returncode})")
+
 # Prüfen, ob eine IP-Adresse übergeben wurde
 if len(sys.argv) < 2:
     print("❌ Fehler: Bitte eine IP-Adresse des Raspberry Pi angeben!")
@@ -12,32 +43,13 @@ pi_ip = sys.argv[1]
 
 # Liste der Features, die installiert werden sollen
 features = [
-    "Update",
-    "Airplay",
-    "SnapCastServer",
-    "APSnapSererverConnect"
+    "APSnapServerConnect",
+    "Feature2",
+    "Feature3"
 ]
-
-# Skript, das für jedes Feature aufgerufen wird
-script_name = "InitDevice.py"
 
 # Loop über alle Features und ausführen
 for feature in features:
-    print(f"🚀 Starte Installation von '{feature}' auf {pi_ip} ...")
-    
-    try:
-        # InitDevice.py für das Feature ausführen
-        result = subprocess.run(
-            ["python3", script_name, pi_ip, feature],
-            check=True,
-            capture_output=True,
-            text=True
-        )
-
-        # Ausgabe des Skripts anzeigen
-        print(f"✅ {feature} erfolgreich installiert:\n{result.stdout}")
-
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Fehler bei der Installation von {feature}:\n{e.stderr}")
+    run_feature_install(pi_ip, feature)
 
 print("🎉 Alle Features wurden verarbeitet!")
