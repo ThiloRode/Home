@@ -13,7 +13,6 @@ echo "========================================"
 echo "Airplay and Snapcast Conection Installation"
 echo "========================================"
 
-#!/bin/bash
 
 CONFIG_FILE="/etc/snapserver.conf"
 BACKUP_FILE="/etc/snapserver.conf.bak"
