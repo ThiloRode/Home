@@ -49,5 +49,5 @@ if grep -q "^\[stream\]" "$CONFIG_FILE"; then
         echo "⚠️ Alle gewünschten Einträge sind bereits vorhanden. Keine Änderung notwendig."
     fi
 else
-    echo "❌ Fehler: Der Abschnitt [stream] wurde nicht in der Datei gefunden!"
+    echo "Fehler: Der Abschnitt [stream] wurde nicht in der Datei gefunden!"
 fi
