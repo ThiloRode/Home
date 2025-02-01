@@ -17,7 +17,7 @@ CONFIG_FILE="/etc/snapserver.conf"
 BACKUP_FILE="/etc/snapserver.conf.bak"
 
 # Die neuen Einträge, die hinter [stream] eingefügt werden sollen
-NEW_ENTRIES="source = airplay:///usr/bin/shairport-sync?name=ZuhauseAirplay&dryout_ms=2000&port=5000
+NEW_ENTRIES="airplay: airplay:///usr/bin/shairport-sync?name=ZuhauseAirplay&dryout_ms=2000&port=5000
 source = airplay:///shairport-sync?name=Airplay"
 
 # Backup der Datei erstellen (nur einmal, falls noch nicht vorhanden)
