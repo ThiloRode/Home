@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script: installt.sh
-# Description: Installs Bluetooth and related packages on a Raspberry Pi
+# Description: Installs AirPlay and Snapcast connection on a Raspberry Pi
 # Author: Thilo Rode
 
 set -e  # Exit on error
@@ -10,9 +10,8 @@ export DEBIAN_FRONTEND=noninteractive
 
 # Header
 echo "========================================"
-echo "Airplay and Snapcast Conection Installation"
+echo "Airplay and Snapcast Connection Installation"
 echo "========================================"
-
 
 CONFIG_FILE="/etc/snapserver.conf"
 BACKUP_FILE="/etc/snapserver.conf.bak"
@@ -31,16 +30,22 @@ fi
 if grep -q "^\[stream\]" "$CONFIG_FILE"; then
     # Prüfen, ob mindestens ein neuer Eintrag bereits existiert
     ADD_REQUIRED=0
-    for entry in "$NEW_ENTRIES"; do
+    while IFS= read -r entry; do
         if ! grep -qF "$entry" "$CONFIG_FILE"; then
             ADD_REQUIRED=1
             break
         fi
-    done
+    done <<< "$NEW_ENTRIES"
 
     if [ $ADD_REQUIRED -eq 1 ]; then
-        # Falls mindestens ein Eintrag fehlt, werden ALLE neuen Einträge hinzugefügt
-        sudo sed -i "/^\[stream\]/a $NEW_ENTRIES" "$CONFIG_FILE"
+        # Falls mindestens ein Eintrag fehlt, ALLE neuen Einträge hinter [stream] hinzufügen
+        TMP_FILE=$(mktemp)  # Temporäre Datei für Verarbeitung
+        awk -v new_entries="$NEW_ENTRIES" '
+            /^\[stream\]/ { print; print new_entries; next }
+            { print }
+        ' "$CONFIG_FILE" > "$TMP_FILE"
+        
+        sudo mv "$TMP_FILE" "$CONFIG_FILE"
         echo "✅ Snapserver-Konfiguration aktualisiert."
         # Snapserver neu starten
         sudo systemctl restart snapserver
