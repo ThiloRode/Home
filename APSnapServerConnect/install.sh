@@ -23,14 +23,13 @@ if [ ! -f "$BACKUP_FILE" ]; then
     echo "✅ Backup erstellt: $BACKUP_FILE"
 fi
 
-# 1️⃣ Ersetze die auskommentierte "airplay:" Zeile mit der richtigen Konfiguration
+# 1️⃣ Ersetze die auskommentierte "airplay:" Zeile durch die richtige Konfiguration
 sudo sed -i 's|^# airplay: airplay://.*|airplay: airplay:///usr/bin/shairport-sync?name=ZuhauseAirplay&dryout_ms=2000&port=5000|' "$CONFIG_FILE"
 
-# 2️⃣ Prüfen, ob "source = airplay:///shairport-sync?name=Airplay" bereits existiert
+# 2️⃣ Stelle sicher, dass "source = airplay:///shairport-sync?name=Airplay" vor "source = pipe:///tmp/snapfifo?name=default" eingefügt wird
 if ! grep -q "^source = airplay:///shairport-sync?name=Airplay" "$CONFIG_FILE"; then
-    # Falls nicht vorhanden, füge es VOR "source = pipe:///tmp/snapfifo?name=default" ein
     sudo sed -i '/^source = pipe:\/\/\/tmp\/snapfifo?name=default/i source = airplay:///shairport-sync?name=Airplay' "$CONFIG_FILE"
-    echo "✅ 'source = airplay:///shairport-sync?name=Airplay' hinzugefügt."
+    echo "✅ 'source = airplay:///shairport-sync?name=Airplay' wurde eingefügt."
 else
     echo "⚠️ 'source = airplay:///shairport-sync?name=Airplay' existiert bereits. Keine Änderung notwendig."
 fi
