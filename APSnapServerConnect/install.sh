@@ -56,3 +56,6 @@ if grep -q "^\[stream\]" "$CONFIG_FILE"; then
 else
     echo "❌ Fehler: Der Abschnitt [stream] wurde nicht in der Datei gefunden!"
 fi
+
+
+sudo systemctl restart snapserver
