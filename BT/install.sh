@@ -79,6 +79,34 @@ EOF
 echo "Starting installation..."
 install_bluetooth
 
+
+# FIFO-Datei definieren
+FIFO_PATH="/home/pi/fifos/pafifo"
+
+# 1️⃣ Prüfen, ob FIFO existiert – falls nicht, erstellen
+if [ ! -p "$FIFO_PATH" ]; then
+    echo "📌 Erstelle FIFO-Datei: $FIFO_PATH"
+    mkfifo "$FIFO_PATH"
+    chmod 666 "$FIFO_PATH"
+fi
+
+# 2️⃣ PulseAudio FIFO-Sink erstellen (falls noch nicht vorhanden)
+if ! pactl list sinks short | grep -q "pulseaudio_fifo"; then
+    echo "🔄 Erstelle PulseAudio FIFO-Sink..."
+    pactl load-module module-pipe-sink file="$FIFO_PATH" format=s16le rate=48000 channels=2 sink_name=pulseaudio_fifo
+else
+    echo "✅ PulseAudio FIFO-Sink existiert bereits."
+fi
+
+# 3️⃣ Setze das FIFO-Sink als Standardausgabe für PulseAudio
+echo "🔄 Setze pulseaudio_fifo als Standard-Sink..."
+pactl set-default-sink pulseaudio_fifo
+
+echo "✅ Alle Audio-Ausgaben werden jetzt ins FIFO geschrieben!"
+
+
+
+
 echo "Rebooting to apply changes..."
-systemctl restart bluetooth && pulseaudio -k && pulseaudio --start
+
 
