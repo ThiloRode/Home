@@ -79,3 +79,7 @@ EOF
 echo "Starting installation..."
 install_bluetooth
 
+
+sudo systemctl restart bluetooth
+pulseaudio --kill && pulseaudio --start
+
