@@ -11,7 +11,7 @@ fi
 PI_IP="$1"
 
 # Liste der Features, die installiert werden sollen
-FEATURES=("Update" "Airplay" "SnapCastServer" "APSnapServerConnect")
+FEATURES=("Update" "Airplay" "SnapCastServer" "APSnapServerConnect" "BT")
 
 # Loop über alle Features und ausführen
 for FEATURE in "${FEATURES[@]}"; do
