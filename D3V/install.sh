@@ -36,7 +36,7 @@ pcm.left_only {
     type plug
     slave.pcm \"$ALSA_HW\"
     ttable.0.0 1  # Linker Kanal bleibt links
-    ttable.1.1 1  # Rechter Kanal bleibt stumm
+    ttable.1.0 0  # Rechter Kanal bleibt stumm
 }
 
 pcm.!default pcm.left_only
