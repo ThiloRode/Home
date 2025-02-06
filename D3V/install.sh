@@ -16,6 +16,9 @@ echo "========================================"
 CARD_NUM=$(cat /proc/asound/cards | grep -i "D3V" | head -n 1 | awk '{print $1}')
 CARD_NAME=$(aplay -L | grep -oP '(?<=CARD=)D3V' | head -n 1)
 
+echo $CARD_NUM
+echo $CARD_NAME
+
 # 2️⃣ Überprüfen, ob D3V gefunden wurde
 if [[ -n "$CARD_NAME" ]]; then
     echo "ADAM Audio D3V gefunden als hw:CARD=$CARD_NAME"
