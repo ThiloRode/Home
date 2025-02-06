@@ -23,6 +23,12 @@ sudo apt update
 echo "[INFO] Installiere erforderliche Pakete..."
 sudo apt install -y hostapd dnsmasq
 
+# Bestehende WLAN-Verbindung deaktivieren
+echo "[INFO] Deaktiviere bestehende WLAN-Verbindung..."
+sudo rfkill unblock wlan
+sudo sed -i '/^interface wlan0/d' /etc/wpa_supplicant/wpa_supplicant.conf || true
+sudo systemctl disable --now wpa_supplicant || true
+
 # Hostapd (Access Point) konfigurieren
 echo "[INFO] Konfiguriere Hostapd..."
 echo "interface=$WLAN_INTERFACE
@@ -56,6 +62,11 @@ static ip_address=192.168.4.1/24" | sudo tee -a /etc/dhcpcd.conf > /dev/null
 # Dienste aktivieren und starten
 echo "[INFO] Aktiviere und starte Hostapd und Dnsmasq..."
 sudo systemctl unmask hostapd
-sudo systemctl enable hostapd
+sudo systemctl enable --now hostapd dnsmasq
+
+# Sicherstellen, dass die IP-Adresse gesetzt wird
+sudo ifconfig wlan0 192.168.4.1 netmask 255.255.255.0 up
+
+# Neustart des Raspberry Pi
 echo "[INFO] Neustart des Systems erforderlich..."
 sudo reboot
