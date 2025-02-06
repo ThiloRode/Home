@@ -26,8 +26,9 @@ sudo apt install -y hostapd dnsmasq
 # Bestehende WLAN-Verbindung deaktivieren
 echo "[INFO] Deaktiviere bestehende WLAN-Verbindung..."
 sudo rfkill unblock wlan
-sudo sed -i '/^interface wlan0/d' /etc/wpa_supplicant/wpa_supplicant.conf || true
-sudo rm -f /etc/wpa_supplicant/wpa_supplicant.conf  # Komplett entfernen
+if [ -f /etc/wpa_supplicant/wpa_supplicant.conf ]; then
+    sudo rm -f /etc/wpa_supplicant/wpa_supplicant.conf
+fi
 sudo systemctl disable --now wpa_supplicant || true
 
 # DHCP-Client für wlan0 deaktivieren
