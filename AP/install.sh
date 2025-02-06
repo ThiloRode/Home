@@ -30,6 +30,11 @@ if [ -f /etc/wpa_supplicant/wpa_supplicant.conf ]; then
     sudo rm -f /etc/wpa_supplicant/wpa_supplicant.conf
 fi
 sudo systemctl disable --now wpa_supplicant || true
+sudo systemctl mask wpa_supplicant
+
+# Entferne vorherige DHCP-Konfigurationen
+sudo rm -f /etc/dhcpcd.conf
+sudo systemctl disable --now dhcpcd || true
 
 # Hostapd (Access Point) konfigurieren
 echo "[INFO] Konfiguriere Hostapd..."
