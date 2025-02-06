@@ -20,10 +20,8 @@ echo $CARD_NUM
 echo $CARD_NAME
 
 # 2️⃣ Überprüfen, ob D3V gefunden wurde
-if [[ -n "$CARD_NAME" ]]; then
-    echo "ADAM Audio D3V gefunden als hw:CARD=$CARD_NAME"
-    ALSA_HW="hw:CARD=$CARD_NAME"
-elif [[ -n "$CARD_NUM" ]]; then
+
+if [[ -n "$CARD_NUM" ]]; then
     echo "ADAM Audio D3V gefunden als hw:$CARD_NUM,0"
     ALSA_HW="hw:$CARD_NUM,0"
 else
