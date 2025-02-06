@@ -31,11 +31,6 @@ if [ -f /etc/wpa_supplicant/wpa_supplicant.conf ]; then
 fi
 sudo systemctl disable --now wpa_supplicant || true
 
-# DHCP-Client für wlan0 deaktivieren
-echo "[INFO] Deaktiviere dhcpcd für $WLAN_INTERFACE..."
-echo "denyinterfaces $WLAN_INTERFACE" | sudo tee -a /etc/dhcpcd.conf > /dev/null
-sudo systemctl restart dhcpcd
-
 # Hostapd (Access Point) konfigurieren
 echo "[INFO] Konfiguriere Hostapd..."
 echo "interface=$WLAN_INTERFACE
@@ -61,16 +56,19 @@ echo "[INFO] Konfiguriere Dnsmasq..."
 echo "interface=$WLAN_INTERFACE
 dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h" | sudo tee /etc/dnsmasq.conf > /dev/null
 
-# Statische IP-Adresse für den Access Point setzen
-echo "[INFO] Setze statische IP-Adresse..."
-sudo ip addr flush dev $WLAN_INTERFACE  # Vorherige IPs entfernen
-sudo ip link set $WLAN_INTERFACE up
-sudo ip addr add 192.168.4.1/24 dev $WLAN_INTERFACE
+# Statische IP-Adresse für den Access Point setzen mit systemd-networkd
+echo "[INFO] Setze statische IP-Adresse über systemd-networkd..."
+echo "[Match]
+Name=$WLAN_INTERFACE
+
+[Network]
+Address=192.168.4.1/24
+DHCPServer=yes" | sudo tee /etc/systemd/network/10-wlan0.network > /dev/null
 
 # Dienste aktivieren und starten
-echo "[INFO] Aktiviere und starte Hostapd und Dnsmasq..."
+echo "[INFO] Aktiviere und starte Hostapd, Dnsmasq und systemd-networkd..."
 sudo systemctl unmask hostapd
-sudo systemctl enable --now hostapd dnsmasq
+sudo systemctl enable --now hostapd dnsmasq systemd-networkd
 
 # Neustart des Raspberry Pi
 echo "[INFO] Neustart des Systems erforderlich..."
