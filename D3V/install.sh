@@ -43,6 +43,10 @@ pcm.!default pcm.left_only
 ctl.!default ctl.hw
 EOL"
 
+echo "Snapclient wird mit Default-Output konfiguriert..."
+#echo 'SNAPCLIENT_OPTS="--soundcard plug:default"' | sudo tee /etc/default/snapclient
+sudo echo 'SNAPCLIENT_OPTS="--soundcard left_only"' | sudo tee /etc/default/snapclient
+
 # 4️⃣ Neustart der ALSA-Dienste
 echo "🔄 Neustart von ALSA..."
 sudo alsactl init
