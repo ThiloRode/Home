@@ -1,11 +1,11 @@
-'''
+"""
 Skript: InitDevice.py
 Beschreibung:
 Dieses Skript verbindet sich über SSH mit einem Raspberry Pi, überprüft oder installiert Git, klont oder aktualisiert ein angegebenes Git-Repository
 und stellt sicher, dass ein Feature im Repository existiert. Wenn das Feature nicht existiert, wird das Skript beendet.
 Zusätzlich wird ein Skript innerhalb des Features ausgeführt, und detaillierte Protokolle werden für alle Operationen ausgegeben.
 Autor: Thilo Rode
-'''
+"""
 
 import os
 import paramiko
@@ -13,6 +13,7 @@ import subprocess
 
 # Globale Variable für Git-Informationen
 GIT_INFO = None
+
 
 def get_ssh_credentials():
     """
@@ -27,8 +28,11 @@ def get_ssh_credentials():
     username = os.getenv("SSH_USERNAME")
     password = os.getenv("SSH_PASSWORD")
     if not username or not password:
-        raise ValueError("SSH_USERNAME und SSH_PASSWORD müssen als Umgebungsvariablen gesetzt sein.")
+        raise ValueError(
+            "SSH_USERNAME und SSH_PASSWORD müssen als Umgebungsvariablen gesetzt sein."
+        )
     return username, password
+
 
 def establish_ssh_connection(hostname, username, password):
     """
@@ -46,12 +50,15 @@ def establish_ssh_connection(hostname, username, password):
         ValueError: Wenn die Verbindung fehlschlägt.
     """
     ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # Unbekannte Hosts automatisch akzeptieren
+    ssh.set_missing_host_key_policy(
+        paramiko.AutoAddPolicy()
+    )  # Unbekannte Hosts automatisch akzeptieren
     try:
         ssh.connect(hostname, username=username, password=password)
     except paramiko.ssh_exception.SSHException as e:
         raise ValueError(f"Fehler bei der Verbindung mit {hostname}: {e}")
     return ssh
+
 
 def execute_command(ssh, command):
     """
@@ -71,6 +78,7 @@ def execute_command(ssh, command):
     for line in iter(stderr.readline, ""):
         print(f"[FEHLER] {line.strip()}")
     stdout.channel.recv_exit_status()  # Warten, bis der Befehl abgeschlossen ist
+
 
 def is_git_installed(ssh):
     """
@@ -92,6 +100,7 @@ def is_git_installed(ssh):
         print("[WARNUNG] Git ist nicht installiert.")
         return False, None
 
+
 def install_git(ssh):
     """
     Installiert Git auf dem Remote-System.
@@ -105,6 +114,7 @@ def install_git(ssh):
     print("[INFO] Installiere Git auf dem Raspberry Pi...")
     execute_command(ssh, "sudo apt update && sudo apt install -y git")
     print("[INFO] Git wurde erfolgreich installiert.")
+
 
 def check_and_install_git(ssh):
     """
@@ -122,12 +132,17 @@ def check_and_install_git(ssh):
 
     print("[INFO] Konfiguriere Git-Benutzername und E-Mail auf dem Raspberry Pi...")
     if GIT_INFO:
-        if GIT_INFO['user_name']:
+        if GIT_INFO["user_name"]:
             print(f"[KONFIGURATION] Git-Benutzername: {GIT_INFO['user_name']}")
-            execute_command(ssh, f"git config --global user.name \"{GIT_INFO['user_name']}\"")
-        if GIT_INFO['user_email']:
+            execute_command(
+                ssh, f"git config --global user.name \"{GIT_INFO['user_name']}\""
+            )
+        if GIT_INFO["user_email"]:
             print(f"[KONFIGURATION] Git-E-Mail: {GIT_INFO['user_email']}")
-            execute_command(ssh, f"git config --global user.email \"{GIT_INFO['user_email']}\"")
+            execute_command(
+                ssh, f"git config --global user.email \"{GIT_INFO['user_email']}\""
+            )
+
 
 def clone_or_pull_repo(ssh):
     """
@@ -151,7 +166,9 @@ def clone_or_pull_repo(ssh):
     print(f"[INFO] Überprüfe Repository: {repo_name}")
 
     # Prüfen, ob das Verzeichnis existiert
-    stdin, stdout, stderr = ssh.exec_command(f"[ -d {repo_name} ] && echo 'exists' || echo 'not exists'")
+    stdin, stdout, stderr = ssh.exec_command(
+        f"[ -d {repo_name} ] && echo 'exists' || echo 'not exists'"
+    )
     repo_status = stdout.read().decode().strip()
 
     if repo_status == "exists":
@@ -162,14 +179,15 @@ def clone_or_pull_repo(ssh):
         execute_command(ssh, f"git clone {repo_url}")
 
     # Branch auschecken
-    if GIT_INFO and GIT_INFO['branch_name']:
-        branch_name = GIT_INFO['branch_name']
+    if GIT_INFO and GIT_INFO["branch_name"]:
+        branch_name = GIT_INFO["branch_name"]
         print(f"[INFO] Checke Branch '{branch_name}' aus...")
         execute_command(ssh, f"cd {repo_name} && git checkout {branch_name}")
     else:
         print("[WARNUNG] Kein Branch-Name angegeben. Standardbranch wird verwendet.")
 
     return repo_path
+
 
 def install_feature(ssh, repo_path, feature):
     """
@@ -191,7 +209,9 @@ def install_feature(ssh, repo_path, feature):
 
     print(f"[INFO] Überprüfe, ob das Feature '{feature}' existiert...")
     # Prüfen, ob das Feature existiert
-    stdin, stdout, stderr = ssh.exec_command(f"[ -d {feature_path} ] && echo 'exists' || echo 'not exists'")
+    stdin, stdout, stderr = ssh.exec_command(
+        f"[ -d {feature_path} ] && echo 'exists' || echo 'not exists'"
+    )
     feature_status = stdout.read().decode().strip()
 
     if feature_status == "not exists":
@@ -203,6 +223,7 @@ def install_feature(ssh, repo_path, feature):
 
     return feature_path
 
+
 def get_git_info():
     """
     Ermittelt Git-Metadaten wie Branch-Name, URL, Benutzername und E-Mail.
@@ -211,30 +232,47 @@ def get_git_info():
         dict: Ein Wörterbuch mit Git-Metadaten.
     """
     try:
-        branch_name = subprocess.check_output(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.STDOUT
-        ).decode().strip()
+        branch_name = (
+            subprocess.check_output(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.STDOUT
+            )
+            .decode()
+            .strip()
+        )
     except subprocess.CalledProcessError:
         branch_name = None
 
     try:
-        repo_url = subprocess.check_output(
-            ["git", "config", "--get", "remote.origin.url"], stderr=subprocess.STDOUT
-        ).decode().strip()
+        repo_url = (
+            subprocess.check_output(
+                ["git", "config", "--get", "remote.origin.url"],
+                stderr=subprocess.STDOUT,
+            )
+            .decode()
+            .strip()
+        )
     except subprocess.CalledProcessError:
         repo_url = None
 
     try:
-        user_name = subprocess.check_output(
-            ["git", "config", "user.name"], stderr=subprocess.STDOUT
-        ).decode().strip()
+        user_name = (
+            subprocess.check_output(
+                ["git", "config", "user.name"], stderr=subprocess.STDOUT
+            )
+            .decode()
+            .strip()
+        )
     except subprocess.CalledProcessError:
         user_name = None
 
     try:
-        user_email = subprocess.check_output(
-            ["git", "config", "user.email"], stderr=subprocess.STDOUT
-        ).decode().strip()
+        user_email = (
+            subprocess.check_output(
+                ["git", "config", "user.email"], stderr=subprocess.STDOUT
+            )
+            .decode()
+            .strip()
+        )
     except subprocess.CalledProcessError:
         user_email = None
 
@@ -244,6 +282,7 @@ def get_git_info():
         "user_name": user_name,
         "user_email": user_email,
     }
+
 
 if __name__ == "__main__":
     import sys
@@ -281,6 +320,6 @@ if __name__ == "__main__":
         print(f"[FEHLER] Fehler bei der Verbindung oder Installation: {e}")
 
     finally:
-        if 'ssh' in locals() and ssh:
+        if "ssh" in locals() and ssh:
             ssh.close()
             print("[INFO] SSH-Verbindung geschlossen.")
