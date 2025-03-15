@@ -1,62 +1,96 @@
-# README
+# Home Automation System
 
-## Projektbeschreibung
-Dieses Projekt bietet ein Python-Skript (`InitDevice.py`) und ein Bash-Skript (`install.sh`), um einen Raspberry Pi über SSH zu verwalten. Es ermöglicht die Installation und Konfiguration von Git, das Klonen oder Aktualisieren eines Git-Repositorys sowie die Verwaltung von Features innerhalb des Repositorys.
+## Overview
+This repository contains scripts for managing a home automation system based on a Raspberry Pi. The system integrates MQTT for communication and controls heating as well as Snapserver configuration. The key components include:
+- **Device Initialization** for setting up hardware and network configurations.
+- **Snapserver Configuration** for managing multi-room audio streaming.
+- **MQTT Device Management** for automatic detection and control of Shelly devices.
+- **Heating Control** for smart temperature regulation.
 
-### 1. Python-Skript: `InitDevice.py`
-#### Funktionen:
-- **SSH-Verbindung herstellen:** Verbindet sich mit einem Raspberry Pi unter Verwendung von Umgebungsvariablen für Benutzername und Passwort.
-- **Git installieren und konfigurieren:** Prüft, ob Git installiert ist, installiert es bei Bedarf und konfiguriert Benutzername und E-Mail basierend auf lokalen Git-Einstellungen.
-- **Repository klonen oder aktualisieren:** Klont ein Git-Repository oder führt ein `git pull` aus, falls das Repository bereits vorhanden ist.
-- **Feature verwalten:** Stellt sicher, dass ein bestimmtes Feature-Verzeichnis im Repository existiert, und führt ein Skript innerhalb dieses Verzeichnisses aus.
+## Features
+### 1. Device Initialization (`InitDevice.py`)
+This script is responsible for setting up the environment and configuring the system on startup. It:
+- Detects connected devices.
+- Sets up initial configurations for the Raspberry Pi.
+- Ensures required dependencies and services are running.
 
-#### Nutzung:
+### 2. Snapserver Configuration (`SnapserverConfig.py`)
+This script configures Snapserver for multi-room audio streaming. It:
+- Reads and modifies Snapserver's configuration file.
+- Ensures correct audio routing settings.
+- Restarts Snapserver when necessary.
+- Allows dynamic updates to streaming configurations.
+
+### 3. MQTT Device Management (`mqtt_device_manager.py`)
+This script manages Shelly devices using MQTT. It:
+- Detects all available MQTT-enabled Shelly devices.
+- Filters devices relevant to the heating system.
+- Subscribes to their topics to monitor status and control them.
+- Maintains a list of active devices and their states.
+
+### 4. Heating Control (`heizungregelung.py`)
+This script implements a smart heating regulation system. It:
+- Reads temperature data from Shelly devices.
+- Processes control logic to determine heating needs.
+- Sends MQTT commands to adjust heating settings.
+- Allows configurable setpoints and hysteresis control.
+- Logs data for analysis and debugging.
+
+## Prerequisites
+To run this system, you need:
+- **Hardware:** Raspberry Pi Zero 2 E (or similar), Shelly switches with temperature sensors.
+- **Software:**
+  - Python 3.9+
+  - MQTT broker (e.g., Mosquitto)
+  - Snapserver installed on the Raspberry Pi
+  - Required Python packages (see below)
+
+## Installation
+1. Clone this repository:
+   ```bash
+   git clone <repository-url>
+   cd Home
+   ```
+2. Create a virtual environment and install dependencies:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows use: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+## Configuration
+### MQTT Settings
+Modify `config.json` (if available) to specify:
+- MQTT broker IP (`192.168.1.135` by default)
+- Topics for Shelly devices
+- Device-specific settings (e.g., temperature thresholds)
+
+### Snapserver Configuration
+- The script modifies Snapserver’s configuration file dynamically.
+- Ensure that Snapserver is installed and running before execution.
+
+### Heating Control
+- Define target temperatures and regulation parameters in `config.json`.
+- Ensure that MQTT devices are detected correctly before starting regulation.
+
+## Usage
+Run individual scripts as needed:
 ```bash
-python3 InitDevice.py <IP-Adresse> <Feature-Name>
-```
-Beispiel:
-```bash
-python3 InitDevice.py 192.168.1.139 UpdateFeature
-```
-
-#### Voraussetzungen:
-- **Umgebungsvariablen:**
-  - `SSH_USERNAME`: SSH-Benutzername
-  - `SSH_PASSWORD`: SSH-Passwort
-  - `HOME_REPO`: URL des Git-Repositorys
-
-- **Python-Abhängigkeiten:**
-  - `paramiko`
-  - `subprocess`
-
-### 2. Bash-Skript: `install.sh`
-#### Funktionen:
-- Aktualisiert die Paketlisten des Raspberry Pi.
-- Führt ein Upgrade aller installierten Pakete durch.
-- Entfernt veraltete oder nicht mehr benötigte Pakete.
-
-#### Nutzung:
-```bash
-bash install.sh
+python InitDevice.py  # Initializes the device and setup
+python SnapserverConfig.py  # Configures Snapserver for audio streaming
+python mqtt_device_manager.py  # Detects and manages Shelly devices
+python heizungregelung.py  # Controls the heating system
 ```
 
-### 3. Beispielablauf
-1. **SSH-Zugang einrichten:** Stellen Sie sicher, dass die Umgebungsvariablen korrekt gesetzt sind.
-2. **Python-Skript ausführen:** Führen Sie `InitDevice.py` aus, um Git zu installieren, das Repository zu synchronisieren und ein spezifisches Feature zu verwalten.
-3. **Bash-Skript ausführen:** Verwenden Sie `install.sh`, um das System des Raspberry Pi zu aktualisieren.
+To run everything together, consider setting up a systemd service or a startup script.
 
-### 4. Struktur
-```
-.
-├── InitDevice.py   # Python-Skript zur Verwaltung des Raspberry Pi
-├── install.sh      # Bash-Skript zur Systemaktualisierung
-└── README.md       # Dokumentation
-```
+## Logging and Debugging
+- Logs are written to `logs/` (if implemented) for monitoring.
+- Debugging messages can be enabled by setting a debug flag in `config.json`.
 
-### 5. Autor
+## License
+This project is licensed under the MIT License.
+
+## Author
 Thilo Rode
-
----
-Bei Fragen oder Problemen wenden Sie sich bitte an den Autor. Vorschläge zur Verbesserung sind willkommen!
-
 
