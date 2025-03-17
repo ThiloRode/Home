@@ -1,6 +1,7 @@
-import time
 import queue
-from mqtt_device_manager import MQTTClientThread, DeviceManager
+from mqtt_client import MQTTClientThread
+from home_devices import DeviceManager
+import time
 
 if __name__ == "__main__":
     message_queue = queue.Queue()
