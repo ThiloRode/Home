@@ -1,0 +1,33 @@
+#:kivy 2.1.0
+
+<Mothership@BoxLayout>:
+    spotify_tab: spotify_tab
+    weather_tab: weather_tab
+    heiz_tab: heiz_tab
+    
+    
+    orientation: 'vertical'
+
+    TabbedPanel:
+        id: control_tabs
+        background_color: (0, 0, 0, 1)
+        do_default_tab: False
+
+        TabbedPanelItem:
+            text: 'Heizung'
+            BoxLayout:
+                id: heiz_tab
+
+        TabbedPanelItem:
+            id: spotify_tab
+            text: 'Spotify'
+
+        TabbedPanelItem:
+            id: weather_tab
+            text: 'Wetter'
+
+    BoxLayout:
+        id: status_bar
+        size_hint_y: None
+        height: self.parent.height * 0.08
+

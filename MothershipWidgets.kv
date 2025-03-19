@@ -1,0 +1,30 @@
+#:kivy 2.1.0
+
+<Heizregler@BoxLayout>
+    name:name
+    curr_temp:curr_temp
+    set_temp:set_temp
+    up:up
+    down:down
+    orientation: 'vertical'
+    MyLabel:
+        id:name
+    MyLabel:
+        id:curr_temp
+    Button:
+        id:up
+        text: '+'
+        font_size: self.height * .1
+    MyLabel:
+        id:set_temp
+    Button:
+        id:down
+        text: '-'
+        font_size: self.height * .1
+
+<MyLabel@Label>
+    size_hint_y: None
+    height: self.parent.height * 0.1
+    font_size: self.height * .4
+
+
