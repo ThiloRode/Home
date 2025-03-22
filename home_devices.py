@@ -1,7 +1,7 @@
-import json
-import requests
+import logging
 import threading
 import time
+import requests
 
 
 class ShellyDevice(threading.Thread):
@@ -39,7 +39,7 @@ class Shelly1(ShellyDevice):
         self.update_status()
 
     def update_status(self):
-        """Liest den aktuellen Relaisstatus aus"""
+        """Aktualisiert den Status des Geräts und benachrichtigt die GUI."""
         try:
             url = f"http://{self.ip}/relay/0"
             response = requests.get(url, timeout=3)
@@ -49,6 +49,10 @@ class Shelly1(ShellyDevice):
             print(f"[DEBUG] 🔄 Status von {self.name} geladen: {self.status}")
         except requests.RequestException:
             print(f"[ERROR] ❌ Konnte Status von {self.name} nicht abrufen")
+
+        # Benachrichtige die GUI über die Statusänderung
+        if hasattr(self, 'mothership_callback'):
+            self.mothership_callback(self.device_id)
 
     def run(self):
         """Überwacht Änderungen und gibt nur Updates aus, wenn sich Werte ändern"""
@@ -68,29 +72,55 @@ class Heizregler(Shelly1):
 
     def __init__(self, device_id, ip):
         super().__init__(device_id, ip)
-        self.temperature = None
+        self.temperature = None  # Aktuelle Temperatur
+        self.set_temp = None  # Solltemperatur (Mittelwert)
         self.update_status()
 
     def update_status(self):
-        """Liest Temperatur und Relaisstatus aus"""
+        """Aktualisiert den Status des Geräts und benachrichtigt die GUI."""
         try:
-            url = f"http://{self.ip}/status"
-            response = requests.get(url, timeout=3)
+            # Abrufen der Statusdaten
+            status_url = f"http://{self.ip}/status"
+            response = requests.get(status_url, timeout=3)
             response.raise_for_status()
-            data = response.json()
+            status_data = response.json()
 
             # Temperatur auslesen
-            ext_temp = data.get("ext_temperature", {})
+            ext_temp = status_data.get("ext_temperature", {})
             for sensor in ext_temp.values():
                 if isinstance(sensor, dict) and "tC" in sensor:
                     self.temperature = float(sensor["tC"])
 
-            # Relaisstatus auslesen
-            self.status = "on" if data.get("relays", [{}])[0].get("ison") else "off"
+            # Over- und Under-temperature thresholds auslesen
+            settings_url = f"http://{self.ip}/settings"
+            response = requests.get(settings_url, timeout=3)
+            response.raise_for_status()
+            settings_data = response.json()
 
-            print(f"[DEBUG] 🔄 Werte für {self.name} geladen: {self.temperature}°C, {self.status}")
-        except requests.RequestException:
-            print(f"[ERROR] ❌ Konnte Status von {self.name} nicht abrufen")
+            ext_temp_settings = settings_data.get("ext_temperature", {})
+            over_temp = None
+            under_temp = None
+            for sensor in ext_temp_settings.values():
+                if isinstance(sensor, dict):
+                    over_temp = sensor.get("overtemp_threshold_tC", None)
+                    under_temp = sensor.get("undertemp_threshold_tC", None)
+
+            if over_temp is not None and under_temp is not None:
+                self.set_temp = (float(over_temp) + float(under_temp)) / 2
+            else:
+                self.set_temp = None
+
+            # Relaisstatus auslesen
+            self.status = "on" if status_data.get("relays", [{}])[0].get("ison") else "off"
+
+            # Debug-Ausgabe
+            print(f"[DEBUG] 🔄 Werte für {self.name} geladen: {self.temperature}°C, {self.status}, Soll: {self.set_temp}°C")
+        except requests.RequestException as e:
+            print(f"[ERROR] ❌ Konnte Status von {self.name} nicht abrufen: {e}")
+
+        # Benachrichtige die GUI über die Statusänderung
+        if hasattr(self, 'mothership_callback'):
+            self.mothership_callback(self.device_id)
 
     def run(self):
         """Überwacht Änderungen und gibt nur Updates aus, wenn sich Werte ändern"""
@@ -121,7 +151,7 @@ class ShellyDimmer(ShellyDevice):
         self.update_status()
 
     def update_status(self):
-        """Liest den aktuellen Status des Dimmers aus"""
+        """Aktualisiert den Status des Geräts und benachrichtigt die GUI."""
         try:
             url = f"http://{self.ip}/light/0/status"
             response = requests.get(url, timeout=3)
@@ -135,6 +165,10 @@ class ShellyDimmer(ShellyDevice):
             print(f"[DEBUG] 🔄 Werte für {self.name} geladen: {self.brightness}%, {self.status}")
         except requests.RequestException:
             print(f"[ERROR] ❌ Konnte Status von {self.name} nicht abrufen")
+
+        # Benachrichtige die GUI über die Statusänderung
+        if hasattr(self, 'mothership_callback'):
+            self.mothership_callback(self.device_id)
 
     def run(self):
         """Überwacht Änderungen und gibt nur Updates aus, wenn sich Werte ändern"""
@@ -161,14 +195,16 @@ class ShellyDimmer(ShellyDevice):
 class DeviceManager(threading.Thread):
     """Thread zur Verwaltung aller Geräte"""
 
-    def __init__(self, message_queue):
-        super().__init__(daemon=True)
+    def __init__(self, message_queue, mothership=None):
+        super().__init__()
         self.message_queue = message_queue
-        self.devices = {}
+        self.mothership = mothership  # Referenz zur Mothership-Instanz
+        self.running = True
+        self.devices = {}  # Dictionary zur Verwaltung der Geräte
 
     def run(self):
         """Überwacht die Geräte und verarbeitet Nachrichten aus der Queue"""
-        while True:
+        while self.running:
             message = self.message_queue.get()
 
             if message["topic"] == "announce":
@@ -180,14 +216,20 @@ class DeviceManager(threading.Thread):
                                       "dimmer_power"]:
                 self.update_device_status(message)
 
+            # Simulate device management logic
+            time.sleep(1)
+            print("[DEBUG] 🔄 DeviceManager läuft...")
+
+    def stop(self):
+        """Stops the thread."""
+        self.running = False
+
     def process_announcement(self, message):
         """Registriert neue Geräte"""
         device_type = message["type"]
         device_info = message["device_info"]
         device_id = device_info.get("id")
-        model = device_info.get("model")
         ip = device_info.get("ip")
-        
 
         if device_id not in self.devices:
             if device_type == "Heizregler":
@@ -197,12 +239,17 @@ class DeviceManager(threading.Thread):
             elif device_type == "ShellyDimmer":
                 device = ShellyDimmer(device_id, ip)
             else:
-                print(f"[DEBUG] ❌ Unbekanntes Gerät: {type}")
+                logging.warning(f"Unbekanntes Gerät: {device_type}")
                 return
 
             device.start()
             self.devices[device_id] = device
-            print(f"[DEBUG] 📡 {device.name} als {type(device).__name__} registriert")
+
+            # Registriere die Mothership-Callback-Methode
+            if self.mothership:
+                device.mothership_callback = self.mothership.update_heizregler_ui
+
+            logging.info(f"{device.name} als {type(device).__name__} registriert")
 
     def update_device_status(self, message):
         """Aktualisiert den Status eines registrierten Geräts"""
@@ -213,8 +260,8 @@ class DeviceManager(threading.Thread):
         if device_id in self.devices:
             device = self.devices[device_id]
             if topic == "dimmer_ison":
-                device.status= "on" if value else "off"
-            if topic == "dimmer_brightness":
+                device.status = "on" if value else "off"
+            elif topic == "dimmer_brightness":
                 device.brightness = int(value)
             elif topic == "dimmer_power":
                 device.power = float(value)
@@ -223,6 +270,7 @@ class DeviceManager(threading.Thread):
             elif topic == "ext_temperature":
                 device.temperature = float(value)
 
-        
+            # Aufruf der update_status-Methode des Geräts
+            device.update_status()
 
             print(f"[UPDATE] {device.name}: {topic} -> {value}")

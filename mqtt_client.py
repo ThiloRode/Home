@@ -2,6 +2,7 @@ import json
 import paho.mqtt.client as mqtt
 import threading
 import requests
+import time
 
 
 # 🛠 Konfigurationswerte
@@ -18,6 +19,7 @@ class MQTTClientThread(threading.Thread, mqtt.Client):
         self.message_queue = message_queue
         self.on_connect = self.handle_connect
         self.on_message = self.handle_message
+        self.running = True  # Flag to control the thread
 
     def handle_connect(self, client, userdata, flags, rc):
         """Wird ausgeführt, wenn die Verbindung zum Broker hergestellt ist."""
@@ -135,4 +137,10 @@ class MQTTClientThread(threading.Thread, mqtt.Client):
         """Startet die MQTT-Verbindung"""
         self.connect(MQTT_BROKER, MQTT_PORT, 60)
         print("[DEBUG] 🔄 MQTT-Client gestartet...")
-        self.loop_forever()
+        while self.running:
+            self.loop()
+            time.sleep(1)
+
+    def stop(self):
+        """Stops the thread."""
+        self.running = False
