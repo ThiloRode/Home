@@ -12,3 +12,6 @@ HomeControl/.DS_Store
 .DS_Store
 >>>>>>> install_airplay
 .DS_Store
+__pycache__/MothershipWidgets.cpython-39.pyc
+__pycache__/home_devices.cpython-39.pyc
+__pycache__/mqtt_client.cpython-39.pyc

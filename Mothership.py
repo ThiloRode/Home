@@ -26,7 +26,7 @@ class Mothership(BoxLayout):
 
         # Initialize MQTT client and DeviceManager
         self.mqtt_thread = MQTTClientThread(self.message_queue)
-        self.device_manager = DeviceManager(self.message_queue)
+        self.device_manager = DeviceManager(self.message_queue, self)
 
         # Track added Heizregler devices and widgets
         self.added_devices = set()
