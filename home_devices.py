@@ -13,6 +13,7 @@ class ShellyDevice(threading.Thread):
         self.ip = ip
         self.name = self.get_device_name()
         self.running = True
+        self.mothership_callback = lambda device_id: None  # Standardfunktion
 
     def get_device_name(self):
         """Fragt den Gerätenamen über die Shelly-API ab"""
@@ -239,7 +240,7 @@ class DeviceManager(threading.Thread):
             elif device_type == "ShellyDimmer":
                 device = ShellyDimmer(device_id, ip)
             else:
-                logging.warning(f"Unbekanntes Gerät: {device_type}")
+                logging.warning("Unbekanntes Gerät: %s", device_type)
                 return
 
             device.start()
@@ -249,7 +250,7 @@ class DeviceManager(threading.Thread):
             if self.mothership:
                 device.mothership_callback = self.mothership.update_heizregler_ui
 
-            logging.info(f"{device.name} als {type(device).__name__} registriert")
+            logging.info("%s als %s registriert", device.name, type(device).__name__)
 
     def update_device_status(self, message):
         """Aktualisiert den Status eines registrierten Geräts"""
