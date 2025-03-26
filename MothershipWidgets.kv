@@ -1,26 +1,28 @@
 #:kivy 2.1.0
 
 <HeizreglerWidget@BoxLayout>
-    name:name
-    curr_temp:curr_temp
-    set_temp:set_temp
-    up:up
-    down:down
+    name: name
+    curr_temp: curr_temp
+    set_temp: set_temp
+    up: up
+    down: down
     orientation: 'vertical'
     MyLabel:
-        id:name
+        id: name
     MyLabel:
-        id:curr_temp
+        id: curr_temp
     Button:
-        id:up
+        id: up
         text: '+'
         font_size: self.height * .15
+        on_press: root.increase_temp()  # Verknüpfe den Button mit der Methode
     MyLabel:
-        id:set_temp
+        id: set_temp
     Button:
-        id:down
+        id: down
         text: '-'
         font_size: self.height * .22
+        on_press: root.decrease_temp()  # Verknüpfe den Button mit der Methode
 
 <MyLabel@Label>
     size_hint_y: None

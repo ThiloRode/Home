@@ -77,6 +77,14 @@ class Heizregler(Shelly1):
         self.set_temp = None  # Solltemperatur (Mittelwert)
         self.update_status()
 
+    def set_temperature(self, temperature):
+        """Setzt die Solltemperatur und benachrichtigt die GUI."""
+        self.set_temp = temperature
+        print(f"[DEBUG] Solltemperatur für {self.name} auf {self.set_temp}°C gesetzt.")
+
+       
+
+        
     def update_status(self):
         """Aktualisiert den Status des Geräts und benachrichtigt die GUI."""
         try:
@@ -202,6 +210,7 @@ class DeviceManager(threading.Thread):
         self.mothership = mothership  # Referenz zur Mothership-Instanz
         self.running = True
         self.devices = {}  # Dictionary zur Verwaltung der Geräte
+        self.devices_lock = threading.Lock()  # Lock für den Zugriff auf devices
 
     def run(self):
         """Überwacht die Geräte und verarbeitet Nachrichten aus der Queue"""
@@ -232,25 +241,26 @@ class DeviceManager(threading.Thread):
         device_id = device_info.get("id")
         ip = device_info.get("ip")
 
-        if device_id not in self.devices:
-            if device_type == "Heizregler":
-                device = Heizregler(device_id, ip)
-            elif device_type == "Shelly1":
-                device = Shelly1(device_id, ip)
-            elif device_type == "ShellyDimmer":
-                device = ShellyDimmer(device_id, ip)
-            else:
-                logging.warning("Unbekanntes Gerät: %s", device_type)
-                return
+        with self.devices_lock:  # Synchronisiere den Zugriff
+            if device_id not in self.devices:
+                if device_type == "Heizregler":
+                    device = Heizregler(device_id, ip)
+                elif device_type == "Shelly1":
+                    device = Shelly1(device_id, ip)
+                elif device_type == "ShellyDimmer":
+                    device = ShellyDimmer(device_id, ip)
+                else:
+                    logging.warning("Unbekanntes Gerät: %s", device_type)
+                    return
 
-            device.start()
-            self.devices[device_id] = device
+                device.start()
+                self.devices[device_id] = device
 
-            # Registriere die Mothership-Callback-Methode
-            if self.mothership:
-                device.mothership_callback = self.mothership.update_heizregler_ui
+                # Registriere die Mothership-Callback-Methode
+                if self.mothership:
+                    device.mothership_callback = self.mothership.update_heizregler_ui
 
-            logging.info("%s als %s registriert", device.name, type(device).__name__)
+                logging.info("%s als %s registriert", device.name, type(device).__name__)
 
     def update_device_status(self, message):
         """Aktualisiert den Status eines registrierten Geräts"""

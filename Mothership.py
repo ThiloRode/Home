@@ -20,6 +20,9 @@ class Mothership(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        # Lock für thread-sicheren Zugriff auf Geräte
+        self.devices_lock = Lock()
+
         # Message queue for communication between threads
         self.message_queue = Queue()
 
@@ -64,10 +67,9 @@ class Mothership(BoxLayout):
         """Adds a Heizregler widget to the GUI (must run in the main thread)."""
         regler_widget = HeizreglerWidget()
 
-        print("------------------------------Adding widget for device_id: ", device_id)
-
-        # Verknüpfe das Widget mit der device_id
+        # Verknüpfe das Widget mit der Heizregler-Instanz
         regler_widget.device_id = device_id
+        regler_widget.device = device  # Referenz auf die Heizregler-Instanz
 
         # Remove "Heizung " from the name for display
         display_name = device.name.replace("Heizung ", "")
@@ -75,12 +77,13 @@ class Mothership(BoxLayout):
         regler_widget.ids.curr_temp.text = f"{device.temperature or 'N/A'}°C"
         regler_widget.ids.set_temp.text = f"{device.set_temp or 'N/A'}°C"
 
+        # Synchronisiere den Zugriff auf widget_map und added_devices
+        with self.devices_lock:
+            self.widget_map[device_id] = regler_widget
+            self.added_devices.add(device_id)
+
         # Add the widget to the heiz_tab
         self.ids.heiz_tab.add_widget(regler_widget)
-
-        # Track the widget and mark the device as added
-        self.widget_map[device_id] = regler_widget
-        self.added_devices.add(device_id)
 
         logging.info("Widget for Heizregler %s added to the GUI.", device_id)
 
